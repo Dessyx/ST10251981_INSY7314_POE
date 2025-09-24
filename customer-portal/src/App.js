@@ -1,4 +1,13 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
+=======
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Homepage from './pages/Homepage';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+import SignIn from './pages/SignIn';
+>>>>>>> Auth-API
 import './App.css';
 import PaymentPage from './components/PaymentPage';
 import PaymentSuccess from './components/PaymentSuccess';
@@ -24,9 +33,22 @@ function App() {
   };
 
   return (
+<<<<<<< HEAD
     <div className="App">
       {renderPage()}
     </div>
+=======
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Homepage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/signin" element={<SignIn />} />
+        </Routes>
+      </div>
+    </Router>
+>>>>>>> Auth-API
   );
 }
 

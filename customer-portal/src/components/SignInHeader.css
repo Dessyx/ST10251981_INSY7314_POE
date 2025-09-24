@@ -1,0 +1,47 @@
+.signin-header {
+  background-color: white;
+  padding: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.signin-header-container {
+  width: 100%;
+  padding: 0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.logo {
+  padding-left: 2rem;
+}
+
+.logo a {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1E3A8A;
+  text-decoration: none;
+}
+
+.signin-nav {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-right: 2rem;
+}
+
+.logout-link {
+  color: #1E3A8A;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.logout-link:hover {
+  color: #3B82F6;
+}
