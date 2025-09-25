@@ -1,0 +1,27 @@
+const db = require('../database'); 
+
+const Transaction = {
+  // Fetch all transactions
+  getAll: async () => {
+    try {
+      const transactions = await db('transactions').select('*');
+      return transactions;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  },
+
+  // Create a new transaction
+  create: async ({ user_id, amount, description }) => {
+    try {
+      const [id] = await db('transactions').insert({ user_id, amount, description });
+      return { id, user_id, amount, description };
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+};
+
+module.exports = Transaction;

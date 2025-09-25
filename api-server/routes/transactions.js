@@ -1,12 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const Transaction = require('../models/transaction'); 
+const Transactions = require('../models/transaction');
 
-// GET all transactions
 router.get('/', async (req, res) => {
   try {
-    const transactions = await Transaction.getAll();
+    const transactions = await transactions.getAll();
     res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/', async (req, res) => {
+  try {
+    const transaction = await Transactions.create(req.body);
+    res.json(transaction);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

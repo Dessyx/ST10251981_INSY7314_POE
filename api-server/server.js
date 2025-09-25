@@ -1,10 +1,11 @@
-const express = require("express");
+const express = require('express');
 const app = express();
+const transactionsRouter = require('./routes/transactions');
 
 app.use(express.json());
+app.use('/transactions', transactionsRouter);
 
-app.get("/", (req, res) => {
-  res.send("API is running...");
+app.listen(4000, () => {
+  console.log('Server running on port 4000');
 });
 
-app.listen(5000, () => console.log("Server running on port 5000"));
