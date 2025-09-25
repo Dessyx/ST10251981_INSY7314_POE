@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SignInHeader from '../components/SignInHeader';
+import { validateSignInForm } from '../utils/validation';
+import { protectFormSubmission } from '../utils/ddosProtection';
 import './SignIn.css';
 
 const SignIn = () => {
@@ -10,16 +12,77 @@ const SignIn = () => {
     password: ''
   });
 
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
+    });
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: null
+      });
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched({
+      ...touched,
+      [name]: true
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Sign in:', formData);
+    setIsSubmitting(true);
+
+    try {
+      // Protect against DDoS and rate limiting
+      protectFormSubmission(formData, 'login');
+      
+      // Validate form
+      const validation = validateSignInForm(formData);
+      
+      if (!validation.isValid) {
+        setErrors(validation.errors);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Here you would typically make an API call to authenticate the user
+      console.log('Sign in:', formData);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Reset form on success
+      setFormData({
+        username: '',
+        accountNumber: '',
+        password: ''
+      });
+      setErrors({});
+      setTouched({});
+      
+      alert('Login successful!');
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error.message.includes('Rate limit') || error.message.includes('Too many')) {
+        alert('Too many attempts. Please wait before trying again.');
+      } else {
+        alert('Login failed. Please check your credentials and try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -47,9 +110,14 @@ const SignIn = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   required
                   placeholder="Username"
+                  className={errors.username && touched.username ? 'error' : ''}
                 />
+                {errors.username && touched.username && (
+                  <div className="error-message">{errors.username}</div>
+                )}
               </div>
               
               <div className="form-group">
@@ -59,9 +127,14 @@ const SignIn = () => {
                   name="accountNumber"
                   value={formData.accountNumber}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   required
                   placeholder="Account Number"
+                  className={errors.accountNumber && touched.accountNumber ? 'error' : ''}
                 />
+                {errors.accountNumber && touched.accountNumber && (
+                  <div className="error-message">{errors.accountNumber}</div>
+                )}
               </div>
               
               <div className="form-group">
@@ -71,13 +144,22 @@ const SignIn = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   required
                   placeholder="Password"
+                  className={errors.password && touched.password ? 'error' : ''}
                 />
+                {errors.password && touched.password && (
+                  <div className="error-message">{errors.password}</div>
+                )}
               </div>
               
-              <button type="submit" className="signin-button">
-                Log In
+              <button 
+                type="submit" 
+                className="signin-button"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Signing In...' : 'Log In'}
               </button>
               
               <div className="form-footer">

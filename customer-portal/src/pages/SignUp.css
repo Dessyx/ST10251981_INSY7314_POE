@@ -79,6 +79,41 @@
   border-color: #3B82F6;
 }
 
+.form-group input.error {
+  border-color: #EF4444;
+  background-color: #FEF2F2;
+}
+
+.form-group input.error:focus {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-message {
+  color: #EF4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  margin-left: 0.25rem;
+}
+
+.error-message ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.error-message li {
+  margin-bottom: 0.25rem;
+}
+
+.signup-button:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.signup-button:disabled:hover {
+  background-color: #9CA3AF;
+}
+
 .signup-button {
   background-color: #1E3A8A;
   color: white;
