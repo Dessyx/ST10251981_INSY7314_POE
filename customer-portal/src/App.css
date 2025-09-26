@@ -15,10 +15,7 @@ body {
 .App {
   min-height: 100vh;
 }
-<<<<<<< HEAD
-=======
 
 .homepage {
-  padding-top: 0; /* Remove gap between header and hero */
+  padding-top: 0; 
 }
->>>>>>> Auth-API

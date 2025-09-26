@@ -41,7 +41,7 @@ export const getClientIdentifier = () => {
   const factors = [
     navigator.userAgent,
     navigator.language,
-    screen.width + 'x' + screen.height,
+    window.screen.width + 'x' + window.screen.height,
     new Date().getTimezoneOffset().toString()
   ];
   
