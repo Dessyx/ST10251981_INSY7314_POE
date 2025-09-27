@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './TransactionHistory.css';
 
 const TransactionHistory = ({ currentPage, setCurrentPage }) => {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState('');
 
   // Sample transaction history data
@@ -98,6 +100,16 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
       <main className="main-content">
         <h2 className="page-title">Transaction History</h2>
         
+        {/* Action Buttons */}
+        <div className="action-section">
+          <button 
+            className="make-payment-btn"
+            onClick={() => navigate('/payment')}
+          >
+            Make Payment
+          </button>
+        </div>
+
         {/* Date Filter */}
         <div className="filter-section">
           <label htmlFor="date-filter" className="filter-label">

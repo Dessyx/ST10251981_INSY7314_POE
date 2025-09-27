@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SignInHeader from '../components/SignInHeader';
 import { validateSignInForm } from '../utils/validation';
 import { protectFormSubmission } from '../utils/ddosProtection';
+import { authService } from '../services/authService';
 import './SignIn.css';
 
 const SignIn = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     accountNumber: '',
@@ -57,33 +59,40 @@ const SignIn = () => {
         return;
       }
 
-      // Here you would typically make an API call to authenticate the user
-      console.log('Sign in:', formData);
+      // Make API call to authenticate the user
+      const result = await authService.login(formData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Reset form on success
-      setFormData({
-        username: '',
-        accountNumber: '',
-        password: ''
-      });
-      setErrors({});
-      setTouched({});
-      
-      alert('Login successful!');
+      if (result.success) {
+        // Reset form on success
+        setFormData({
+          username: '',
+          accountNumber: '',
+          password: ''
+        });
+        setErrors({});
+        setTouched({});
+        
+        // Redirect based on user role
+        if (result.role === 'employee') {
+          navigate('/TransactionDashboard');
+        } else {
+          navigate('/TransactionHistory');
+        }
+      } else {
+        setErrors({ general: result.error });
+      }
     } catch (error) {
       console.error('Login error:', error);
       if (error.message.includes('Rate limit') || error.message.includes('Too many')) {
-        alert('Too many attempts. Please wait before trying again.');
+        setErrors({ general: 'Too many attempts. Please wait before trying again.' });
       } else {
-        alert('Login failed. Please check your credentials and try again.');
+        setErrors({ general: 'Login failed. Please check your credentials and try again.' });
       }
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="signin-page">
@@ -103,6 +112,10 @@ const SignIn = () => {
             </div>
             
             <form className="signin-form" onSubmit={handleSubmit}>
+              {errors.general && (
+                <div className="error-message general-error">{errors.general}</div>
+              )}
+              
               <div className="form-group">
                 <input
                   type="text"

@@ -77,6 +77,35 @@
   margin: 0 auto;
 }
 
+/* Action Section */
+.action-section {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.make-payment-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.make-payment-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.make-payment-btn:active {
+  transform: translateY(0);
+}
+
 .page-title {
   color: #333;
   font-size: 1.8rem;

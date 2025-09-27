@@ -1,21 +1,48 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SignInHeader from '../components/SignInHeader';
-import { validateSignUpForm } from '../utils/validation';
+import { 
+  validateSignUpForm, 
+  validateFullName, 
+  validateIdNumber, 
+  validateAccountNumber, 
+  validateUsername, 
+  validatePassword 
+} from '../utils/validation';
 import { protectFormSubmission } from '../utils/ddosProtection';
+import { authService } from '../services/authService';
 import './SignUp.css';
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
     idNumber: '',
     accountNumber: '',
+    username: '',
     password: ''
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'fullName':
+        return validateFullName(value);
+      case 'idNumber':
+        return validateIdNumber(value);
+      case 'accountNumber':
+        return validateAccountNumber(value);
+      case 'username':
+        return validateUsername(value);
+      case 'password':
+        return validatePassword(value);
+      default:
+        return { isValid: true, error: null };
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,21 +51,44 @@ const SignUp = () => {
       [name]: value
     });
 
-    // Clear error when user starts typing
-    if (errors[name]) {
+    // Real-time validation
+    if (touched[name] || value.length > 0) {
+      const validation = validateField(name, value);
+      if (!validation.isValid) {
+        setErrors({
+          ...errors,
+          [name]: validation.error
+        });
+      } else {
+        // Clear error if validation passes
+        setErrors({
+          ...errors,
+          [name]: null
+        });
+      }
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched({
+      ...touched,
+      [name]: true
+    });
+
+    // Validate field on blur
+    const validation = validateField(name, value);
+    if (!validation.isValid) {
+      setErrors({
+        ...errors,
+        [name]: validation.error
+      });
+    } else {
       setErrors({
         ...errors,
         [name]: null
       });
     }
-  };
-
-  const handleBlur = (e) => {
-    const { name } = e.target;
-    setTouched({
-      ...touched,
-      [name]: true
-    });
   };
 
   const handleSubmit = async (e) => {
@@ -58,29 +108,32 @@ const SignUp = () => {
         return;
       }
 
-      // Here you would typically make an API call to register the user
-      console.log('Sign up:', formData);
+      // Make API call to register the user
+      const result = await authService.register(formData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Reset form on success
-      setFormData({
-        fullName: '',
-        idNumber: '',
-        accountNumber: '',
-        password: ''
-      });
-      setErrors({});
-      setTouched({});
-      
-      alert('Account created successfully!');
+      if (result.success) {
+        // Reset form on success
+        setFormData({
+          fullName: '',
+          idNumber: '',
+          accountNumber: '',
+          username: '',
+          password: ''
+        });
+        setErrors({});
+        setTouched({});
+        
+        // Navigate to login page after successful registration
+        navigate('/signin');
+      } else {
+        setErrors({ general: result.error });
+      }
     } catch (error) {
       console.error('Registration error:', error);
       if (error.message.includes('Rate limit') || error.message.includes('Too many')) {
-        alert('Too many attempts. Please wait before trying again.');
+        setErrors({ general: 'Too many attempts. Please wait before trying again.' });
       } else {
-        alert('Registration failed. Please try again.');
+        setErrors({ general: 'Registration failed. Please try again.' });
       }
     } finally {
       setIsSubmitting(false);
@@ -105,6 +158,10 @@ const SignUp = () => {
           </div>
           
           <form className="signup-form" onSubmit={handleSubmit}>
+            {errors.general && (
+              <div className="error-message general-error">{errors.general}</div>
+            )}
+            
             <div className="form-group">
               <input
                 type="text"
@@ -115,9 +172,9 @@ const SignUp = () => {
                 onBlur={handleBlur}
                 required
                 placeholder="Full Name"
-                className={errors.fullName && touched.fullName ? 'error' : ''}
+                className={errors.fullName ? 'error' : ''}
               />
-              {errors.fullName && touched.fullName && (
+              {errors.fullName && (
                 <div className="error-message">{errors.fullName}</div>
               )}
             </div>
@@ -132,9 +189,9 @@ const SignUp = () => {
                 onBlur={handleBlur}
                 required
                 placeholder="ID Number"
-                className={errors.idNumber && touched.idNumber ? 'error' : ''}
+                className={errors.idNumber ? 'error' : ''}
               />
-              {errors.idNumber && touched.idNumber && (
+              {errors.idNumber && (
                 <div className="error-message">{errors.idNumber}</div>
               )}
             </div>
@@ -149,10 +206,27 @@ const SignUp = () => {
                 onBlur={handleBlur}
                 required
                 placeholder="Account Number"
-                className={errors.accountNumber && touched.accountNumber ? 'error' : ''}
+                className={errors.accountNumber ? 'error' : ''}
               />
-              {errors.accountNumber && touched.accountNumber && (
+              {errors.accountNumber && (
                 <div className="error-message">{errors.accountNumber}</div>
+              )}
+            </div>
+            
+            <div className="form-group">
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+                placeholder="Username"
+                className={errors.username ? 'error' : ''}
+              />
+              {errors.username && (
+                <div className="error-message">{errors.username}</div>
               )}
             </div>
             
@@ -166,9 +240,9 @@ const SignUp = () => {
                 onBlur={handleBlur}
                 required
                 placeholder="Password"
-                className={errors.password && touched.password ? 'error' : ''}
+                className={errors.password ? 'error' : ''}
               />
-              {errors.password && touched.password && (
+              {errors.password && (
                 <div className="error-message">
                   {Array.isArray(errors.password) ? (
                     <ul>
