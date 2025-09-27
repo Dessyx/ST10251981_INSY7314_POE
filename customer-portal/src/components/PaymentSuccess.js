@@ -28,41 +28,11 @@ const PaymentSuccess = ({ currentPage, setCurrentPage }) => {
 
   return (
     <div className="success-page">
-      {/* Header */}
-      <header className="header">
+      {/* Simple Header */}
+      <header className="simple-header">
         <div className="header-content">
           <div className="header-left">
             <h1 className="logo">PayNow</h1>
-          </div>
-          <div className="header-center">
-            <div className="page-navigation">
-              <button 
-                className={currentPage === 'payment' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('payment')}
-              >
-                Payment Page
-              </button>
-              <button 
-                className={currentPage === 'success' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('success')}
-              >
-                Success Page
-              </button>
-              <button 
-                className={currentPage === 'dashboard' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('dashboard')}
-              >
-                Dashboard
-              </button>
-              <button 
-                className={currentPage === 'history' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('history')}
-              >
-                Transaction History
-              </button>
-            </div>
-          </div>
-          <div className="header-right">
           </div>
         </div>
       </header>
@@ -82,28 +52,48 @@ const PaymentSuccess = ({ currentPage, setCurrentPage }) => {
           <div className="transaction-details">
             <div className="detail-row">
               <span className="detail-label">Transaction Number:</span>
-              <span className="detail-value">{transactionData.transactionId}</span>
+              <span className="detail-value">{transactionData.transactionId || `TXN${transactionData.id}`}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Amount:</span>
-              <span className="detail-value">{transactionData.currency} {transactionData.amount}</span>
+              <span className="detail-value">{transactionData.currency} {parseFloat(transactionData.amount).toFixed(2)}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Recipient:</span>
-              <span className="detail-value">{transactionData.recipient}</span>
+              <span className="detail-value">{transactionData.recipient || transactionData.recipient_name}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Provider:</span>
               <span className="detail-value">{transactionData.provider}</span>
             </div>
+            {transactionData.swift_code && (
+              <div className="detail-row">
+                <span className="detail-label">SWIFT Code:</span>
+                <span className="detail-value">{transactionData.swift_code}</span>
+              </div>
+            )}
             <div className="detail-row">
               <span className="detail-label">Date:</span>
-              <span className="detail-value">{new Date(transactionData.timestamp).toLocaleDateString()}</span>
+              <span className="detail-value">
+                {new Date(transactionData.timestamp || transactionData.created_at).toLocaleDateString()}
+              </span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Time:</span>
+              <span className="detail-value">
+                {new Date(transactionData.timestamp || transactionData.created_at).toLocaleTimeString()}
+              </span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Status:</span>
               <span className="detail-value success-status">{transactionData.status}</span>
             </div>
+            {transactionData.description && (
+              <div className="detail-row">
+                <span className="detail-label">Description:</span>
+                <span className="detail-value">{transactionData.description}</span>
+              </div>
+            )}
           </div>
           
           {/* Action Buttons */}

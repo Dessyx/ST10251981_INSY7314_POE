@@ -12,6 +12,13 @@
   border-bottom: 1px solid #e9ecef;
 }
 
+/* Simple Header */
+.simple-header {
+  background-color: #f8f9fa;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -299,6 +306,35 @@
   color: #721c24;
 }
 
+/* Loading and Error States */
+.loading-state,
+.error-state {
+  padding: 3rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.loading-state p,
+.error-state p {
+  font-size: 1.1rem;
+  margin: 0 0 1rem 0;
+}
+
+.retry-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.retry-button:hover {
+  background-color: #0056b3;
+}
+
 /* No Transactions */
 .no-transactions {
   padding: 3rem;
@@ -309,6 +345,14 @@
 .no-transactions p {
   font-size: 1.1rem;
   margin: 0;
+}
+
+/* Transaction Description */
+.transaction-description {
+  color: #888;
+  font-size: 0.75rem;
+  margin: 0.1rem 0 0 0;
+  font-style: italic;
 }
 
 /* Footer */

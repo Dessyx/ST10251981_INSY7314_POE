@@ -1,97 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './TransactionHistory.css';
+import PaymentService from '../services/paymentService';
 
 const TransactionHistory = ({ currentPage, setCurrentPage }) => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState('');
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Sample transaction history data
-  const transactions = [
-    {
-      id: '#1234532',
-      amount: 'R100.00',
-      date: '2025-09-26',
-      status: 'Completed',
-      recipient: 'John Doe',
-      type: 'Payment'
-    },
-    {
-      id: '#1234531',
-      amount: 'R250.00',
-      date: '2025-09-25',
-      status: 'Completed',
-      recipient: 'Jane Smith',
-      type: 'Payment'
-    },
-    {
-      id: '#1234530',
-      amount: 'R75.50',
-      date: '2025-09-24',
-      status: 'Completed',
-      recipient: 'Bob Johnson',
-      type: 'Payment'
-    },
-    {
-      id: '#1234529',
-      amount: 'R500.00',
-      date: '2025-09-23',
-      status: 'Completed',
-      recipient: 'Alice Brown',
-      type: 'Payment'
-    },
-    {
-      id: '#1234528',
-      amount: 'R150.25',
-      date: '2025-09-22',
-      status: 'Completed',
-      recipient: 'Charlie Wilson',
-      type: 'Payment'
-    }
-  ];
+  // Fetch transactions from API
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        // Get transactions for user (defaulting to user ID 1 for demo)
+        const response = await PaymentService.getTransactions(1);
+        setTransactions(response.transactions || response);
+      } catch (err) {
+        console.error('Failed to fetch transactions:', err);
+        setError('Failed to load transaction history. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
 
   // Filter transactions by selected date
   const filteredTransactions = selectedDate 
-    ? transactions.filter(transaction => transaction.date === selectedDate)
+    ? transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.created_at || transaction.timestamp).toISOString().split('T')[0];
+        return transactionDate === selectedDate;
+      })
     : transactions;
+
+  // Format transaction data for display
+  const formatTransaction = (transaction) => ({
+    id: `TXN${transaction.id.toString().padStart(6, '0')}`,
+    amount: `${transaction.currency} ${parseFloat(transaction.amount).toFixed(2)}`,
+    date: new Date(transaction.created_at || transaction.timestamp).toISOString().split('T')[0],
+    status: transaction.status || 'Completed',
+    recipient: transaction.recipient_name || transaction.recipient || 'Unknown',
+    type: 'Payment',
+    description: transaction.description || '',
+    timestamp: transaction.created_at || transaction.timestamp
+  });
 
   return (
     <div className="transaction-history-page">
-      {/* Header */}
-      <header className="header">
+      {/* Simple Header */}
+      <header className="simple-header">
         <div className="header-content">
           <div className="header-left">
             <h1 className="logo">PayNow</h1>
-          </div>
-          <div className="header-center">
-            <div className="page-navigation">
-              <button 
-                className={currentPage === 'payment' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('payment')}
-              >
-                Payment Page
-              </button>
-              <button 
-                className={currentPage === 'success' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('success')}
-              >
-                Success Page
-              </button>
-              <button 
-                className={currentPage === 'dashboard' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('dashboard')}
-              >
-                Dashboard
-              </button>
-              <button 
-                className={currentPage === 'history' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('history')}
-              >
-                Transaction History
-              </button>
-            </div>
-          </div>
-          <div className="header-right">
           </div>
         </div>
       </header>
@@ -147,29 +113,52 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
           </div>
 
           <div className="transactions-list">
-            {filteredTransactions.length > 0 ? (
-              filteredTransactions.map((transaction, index) => (
-                <div key={transaction.id} className="transaction-item">
-                  <div className="transaction-icon">
-                    💳
-                  </div>
-                  <div className="transaction-details">
-                    <div className="transaction-main">
-                      <div className="transaction-left">
-                        <h4 className="transaction-id">{transaction.id}</h4>
-                        <p className="transaction-recipient">To: {transaction.recipient}</p>
-                        <p className="transaction-date">{new Date(transaction.date).toLocaleDateString()}</p>
-                      </div>
-                      <div className="transaction-right">
-                        <p className="transaction-amount">{transaction.amount}</p>
-                        <span className={`transaction-status ${transaction.status.toLowerCase()}`}>
-                          {transaction.status}
-                        </span>
+            {loading ? (
+              <div className="loading-state">
+                <p>Loading transactions...</p>
+              </div>
+            ) : error ? (
+              <div className="error-state">
+                <p>{error}</p>
+                <button 
+                  className="retry-button"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : filteredTransactions.length > 0 ? (
+              filteredTransactions.map((transaction, index) => {
+                const formattedTransaction = formatTransaction(transaction);
+                return (
+                  <div key={transaction.id} className="transaction-item">
+                    <div className="transaction-icon">
+                      💳
+                    </div>
+                    <div className="transaction-details">
+                      <div className="transaction-main">
+                        <div className="transaction-left">
+                          <h4 className="transaction-id">{formattedTransaction.id}</h4>
+                          <p className="transaction-recipient">To: {formattedTransaction.recipient}</p>
+                          <p className="transaction-date">
+                            {new Date(formattedTransaction.timestamp).toLocaleDateString()} at{' '}
+                            {new Date(formattedTransaction.timestamp).toLocaleTimeString()}
+                          </p>
+                          {formattedTransaction.description && (
+                            <p className="transaction-description">{formattedTransaction.description}</p>
+                          )}
+                        </div>
+                        <div className="transaction-right">
+                          <p className="transaction-amount">{formattedTransaction.amount}</p>
+                          <span className={`transaction-status ${formattedTransaction.status.toLowerCase()}`}>
+                            {formattedTransaction.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="no-transactions">
                 <p>No transactions found for the selected date.</p>

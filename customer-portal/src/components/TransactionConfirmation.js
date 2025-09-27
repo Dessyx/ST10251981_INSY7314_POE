@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './TransactionConfirmation.css';
+import PaymentService from '../services/paymentService';
 
 const TransactionConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const paymentData = location.state?.paymentData;
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState('');
 
   // If no payment data, redirect back to payment page
   React.useEffect(() => {
@@ -18,18 +21,51 @@ const TransactionConfirmation = () => {
     return null;
   }
 
-  const handleConfirmPayment = () => {
-    // Generate a mock transaction ID
-    const transactionId = 'TXN' + Date.now();
-    const transactionData = {
-      ...paymentData,
-      transactionId,
-      timestamp: new Date().toISOString(),
-      status: 'completed'
-    };
-    
-    // Navigate to success page with transaction data
-    navigate('/success', { state: { transactionData } });
+  const handleConfirmPayment = async () => {
+    setIsProcessing(true);
+    setError('');
+
+    try {
+      // Validate payment data
+      const validation = PaymentService.validatePaymentData(paymentData);
+      if (!validation.isValid) {
+        setError('Invalid payment data. Please check your information.');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Sanitize and prepare data for API
+      const sanitizedData = PaymentService.sanitizePaymentData({
+        ...paymentData,
+        userId: 1 // Default user ID for demo
+      });
+
+      // Create transaction in the database
+      const createdTransaction = await PaymentService.createTransaction(sanitizedData);
+      
+      // Update transaction status to completed (simulating successful payment)
+      const completedTransaction = await PaymentService.updateTransactionStatus(
+        createdTransaction.id, 
+        'completed'
+      );
+
+      // Prepare transaction data for success page
+      const transactionData = {
+        ...completedTransaction,
+        transactionId: `TXN${completedTransaction.id.toString().padStart(6, '0')}`,
+        timestamp: completedTransaction.created_at,
+        status: 'completed',
+        recipient: paymentData.recipient,
+        provider: paymentData.provider
+      };
+      
+      // Navigate to success page with real transaction data
+      navigate('/success', { state: { transactionData } });
+    } catch (error) {
+      console.error('Payment confirmation error:', error);
+      setError(error.message || 'Failed to process payment. Please try again.');
+      setIsProcessing(false);
+    }
   };
 
   const handleEditPayment = () => {
@@ -42,41 +78,11 @@ const TransactionConfirmation = () => {
 
   return (
     <div className="confirmation-page">
-      {/* Header */}
-      <header className="header">
+      {/* Simple Header */}
+      <header className="simple-header">
         <div className="header-content">
           <div className="header-left">
             <h1 className="logo">PayNow</h1>
-          </div>
-          <div className="header-center">
-            <div className="page-navigation">
-              <button 
-                className="nav-link" 
-                onClick={() => navigate('/payment')}
-              >
-                Payment Page
-              </button>
-              <button 
-                className="nav-link" 
-                onClick={() => navigate('/success')}
-              >
-                Success Page
-              </button>
-              <button 
-                className="nav-link" 
-                onClick={() => navigate('/TransactionDashboard')}
-              >
-                Dashboard
-              </button>
-              <button 
-                className="nav-link" 
-                onClick={() => navigate('/TransactionHistory')}
-              >
-                Transaction History
-              </button>
-            </div>
-          </div>
-          <div className="header-right">
           </div>
         </div>
       </header>
@@ -132,13 +138,21 @@ const TransactionConfirmation = () => {
             </div>
           </div>
           
+          {/* Error Display */}
+          {error && (
+            <div className="confirmation-error">
+              <span className="error-message">{error}</span>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="action-buttons">
             <button 
-              className="confirm-button"
+              className={`confirm-button ${isProcessing ? 'processing' : ''}`}
               onClick={handleConfirmPayment}
+              disabled={isProcessing}
             >
-              Confirm Payment
+              {isProcessing ? 'Processing Payment...' : 'Confirm Payment'}
             </button>
             
             <div className="secondary-actions">

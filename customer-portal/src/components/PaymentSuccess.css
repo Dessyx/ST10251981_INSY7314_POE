@@ -12,6 +12,13 @@
   border-bottom: 1px solid #e9ecef;
 }
 
+/* Simple Header */
+.simple-header {
+  background-color: #f8f9fa;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
 .header-content {
   max-width: 1200px;
   margin: 0 auto;

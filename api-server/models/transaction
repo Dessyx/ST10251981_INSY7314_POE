@@ -4,22 +4,96 @@ const db = require('../database');
 
 class Transaction {
   static async getAll() {
-    return db('transactions').select('*');
+    return db('transactions').select('*').orderBy('created_at', 'desc');
   }
 
-  static async create({ user_id, amount, currency, swift_code = null, recipient_name = null, status = null, description = "" }) {
+  static async getById(id) {
+    return db('transactions').where({ id }).first();
+  }
+
+  static async getByUserId(userId) {
+    return db('transactions').where({ user_id: userId }).orderBy('created_at', 'desc');
+  }
+
+  static async create({ user_id, amount, currency, swift_code = null, recipient_name = null, provider = null, status = 'pending', description = "" }) {
     const [id] = await db('transactions').insert({
       user_id,
       amount,
       currency,
       swift_code,
       recipient_name,
+      provider,
       status,
       description,
       created_at: db.fn.now(),
       updated_at: db.fn.now()
     });
     return db('transactions').where({ id }).first();
+  }
+
+  static async updateStatus(id, status) {
+    const updated = await db('transactions')
+      .where({ id })
+      .update({ 
+        status,
+        updated_at: db.fn.now()
+      });
+    
+    if (updated > 0) {
+      return db('transactions').where({ id }).first();
+    }
+    return null;
+  }
+
+  static async update(id, updates) {
+    const allowedFields = ['amount', 'currency', 'swift_code', 'recipient_name', 'provider', 'status', 'description'];
+    const filteredUpdates = {};
+    
+    Object.keys(updates).forEach(key => {
+      if (allowedFields.includes(key)) {
+        filteredUpdates[key] = updates[key];
+      }
+    });
+
+    if (Object.keys(filteredUpdates).length === 0) {
+      throw new Error('No valid fields to update');
+    }
+
+    filteredUpdates.updated_at = db.fn.now();
+
+    const updated = await db('transactions')
+      .where({ id })
+      .update(filteredUpdates);
+    
+    if (updated > 0) {
+      return db('transactions').where({ id }).first();
+    }
+    return null;
+  }
+
+  static async delete(id) {
+    return db('transactions').where({ id }).del();
+  }
+
+  static async getTransactionStats(userId = null) {
+    let query = db('transactions');
+    
+    if (userId) {
+      query = query.where({ user_id: userId });
+    }
+
+    const stats = await query
+      .select(
+        db.raw('COUNT(*) as total_transactions'),
+        db.raw('SUM(amount) as total_amount'),
+        db.raw('AVG(amount) as average_amount'),
+        db.raw('COUNT(CASE WHEN status = ? THEN 1 END) as completed_count', ['completed']),
+        db.raw('COUNT(CASE WHEN status = ? THEN 1 END) as pending_count', ['pending']),
+        db.raw('COUNT(CASE WHEN status = ? THEN 1 END) as failed_count', ['failed'])
+      )
+      .first();
+
+    return stats;
   }
 }
 

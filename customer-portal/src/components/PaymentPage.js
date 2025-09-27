@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './PaymentPage.css';
 import paymentIcon from '../assets/payment-icon.png';
 import { validatePaymentForm, validateAmount, validateCurrency, validateRecipient, validateProvider, validateSwiftCode } from '../utils/validation';
+import PaymentService from '../services/paymentService';
 
 const PaymentPage = ({ currentPage, setCurrentPage }) => {
   const navigate = useNavigate();
@@ -15,13 +16,15 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
     currency: 'ZAR',
     recipient: '',
     provider: '',
-    swiftCode: ''
+    swiftCode: '',
+    description: ''
   });
 
   // Validation state
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   // Load edit data if available
   useEffect(() => {
@@ -87,6 +90,7 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setApiError('');
 
     // Mark all fields as touched
     const allTouched = {};
@@ -107,15 +111,28 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
     // Clear any existing errors
     setErrors({});
 
-    // Navigate to confirmation page with form data
-    navigate('/confirmation', { 
-      state: { 
-        paymentData: {
-          ...formData,
-          amount: parseFloat(formData.amount).toFixed(2)
-        }
-      } 
-    });
+    try {
+      // Prepare payment data for API
+      const paymentData = PaymentService.sanitizePaymentData({
+        ...formData,
+        amount: parseFloat(formData.amount).toFixed(2),
+        userId: 1 // Default user ID for demo
+      });
+
+      // Navigate to confirmation page with form data
+      navigate('/confirmation', { 
+        state: { 
+          paymentData: {
+            ...formData,
+            amount: parseFloat(formData.amount).toFixed(2)
+          }
+        } 
+      });
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setApiError('Failed to process payment. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   // Check if form is valid
@@ -124,41 +141,19 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
 
   return (
     <div className="payment-page">
-      {/* Header */}
-      <header className="header">
+      {/* Simple Header */}
+      <header className="simple-header">
         <div className="header-content">
           <div className="header-left">
             <h1 className="logo">PayNow</h1>
           </div>
-          <div className="header-center">
-            <div className="page-navigation">
-              <button 
-                className={currentPage === 'payment' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('payment')}
-              >
-                Payment Page
-              </button>
-              <button 
-                className={currentPage === 'success' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('success')}
-              >
-                Success Page
-              </button>
-              <button 
-                className={currentPage === 'dashboard' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('dashboard')}
-              >
-                Dashboard
-              </button>
-              <button 
-                className={currentPage === 'history' ? 'nav-active' : 'nav-link'} 
-                onClick={() => setCurrentPage('history')}
-              >
-                Transaction History
-              </button>
-            </div>
-          </div>
           <div className="header-right">
+            <button 
+              className="back-button"
+              onClick={() => navigate('/TransactionHistory')}
+            >
+              ← Back to History
+            </button>
           </div>
         </div>
       </header>
@@ -269,7 +264,31 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
                 <span className="error-message">{errors.swiftCode}</span>
               )}
             </div>
+
+            <div className="form-group full-width">
+              <label htmlFor="description">Description (Optional)</label>
+              <input 
+                type="text" 
+                id="description" 
+                name="description" 
+                value={formData.description}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                className={touched.description && errors.description ? 'input-error' : ''}
+                placeholder="Payment description or reference"
+              />
+              {touched.description && errors.description && (
+                <span className="error-message">{errors.description}</span>
+              )}
+            </div>
             
+            {/* API Error Display */}
+            {apiError && (
+              <div className="api-error">
+                <span className="error-message">{apiError}</span>
+              </div>
+            )}
+
             <button 
               type="submit" 
               className={`paynow-button ${!isFormValid || isSubmitting ? 'disabled' : ''}`}

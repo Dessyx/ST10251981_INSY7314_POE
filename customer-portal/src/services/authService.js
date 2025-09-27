@@ -7,7 +7,9 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest', // CSRF protection header
   },
+  withCredentials: true, // Include cookies for session management
 });
 
 // Add request interceptor to include auth token
