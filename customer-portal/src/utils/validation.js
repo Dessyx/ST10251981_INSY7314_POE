@@ -170,3 +170,157 @@ export const validateSignInForm = (formData) => {
 
   return { isValid, errors };
 };
+
+// Payment form validation functions
+export const validateAmount = (amount) => {
+  const sanitizedAmount = sanitizeInput(amount);
+  
+  if (!validateSQLInput(sanitizedAmount)) {
+    return {
+      isValid: false,
+      error: 'Invalid characters detected in amount'
+    };
+  }
+  
+  const amountRegex = /^\d+(\.\d{1,2})?$/;
+  const numericAmount = parseFloat(sanitizedAmount);
+  
+  if (!amountRegex.test(sanitizedAmount)) {
+    return {
+      isValid: false,
+      error: 'Amount must be a valid number (e.g., 100.50)'
+    };
+  }
+  
+  if (numericAmount <= 0) {
+    return {
+      isValid: false,
+      error: 'Amount must be greater than 0'
+    };
+  }
+  
+  if (numericAmount > 1000000) {
+    return {
+      isValid: false,
+      error: 'Amount cannot exceed R1,000,000'
+    };
+  }
+  
+  return {
+    isValid: true,
+    error: null
+  };
+};
+
+export const validateCurrency = (currency) => {
+  const sanitizedCurrency = sanitizeInput(currency);
+  
+  if (!validateSQLInput(sanitizedCurrency)) {
+    return {
+      isValid: false,
+      error: 'Invalid characters detected in currency'
+    };
+  }
+  
+  const supportedCurrencies = ['ZAR', 'USD', 'EUR', 'GBP'];
+  const isValidCurrency = supportedCurrencies.includes(sanitizedCurrency.toUpperCase());
+  
+  return {
+    isValid: isValidCurrency,
+    error: !isValidCurrency ? 'Currency must be one of: ZAR, USD, EUR, GBP' : null
+  };
+};
+
+export const validateRecipient = (recipient) => {
+  const sanitizedRecipient = sanitizeInput(recipient);
+  
+  if (!validateSQLInput(sanitizedRecipient)) {
+    return {
+      isValid: false,
+      error: 'Invalid characters detected in recipient name'
+    };
+  }
+  
+  const recipientRegex = /^[a-zA-Z\s]{2,50}$/;
+  return {
+    isValid: recipientRegex.test(sanitizedRecipient.trim()),
+    error: !recipientRegex.test(sanitizedRecipient.trim()) ? 'Recipient name must be 2-50 characters and contain only letters and spaces' : null
+  };
+};
+
+export const validateProvider = (provider) => {
+  const sanitizedProvider = sanitizeInput(provider);
+  
+  if (!validateSQLInput(sanitizedProvider)) {
+    return {
+      isValid: false,
+      error: 'Invalid characters detected in provider name'
+    };
+  }
+  
+  const providerRegex = /^[a-zA-Z\s]{2,50}$/;
+  return {
+    isValid: providerRegex.test(sanitizedProvider.trim()),
+    error: !providerRegex.test(sanitizedProvider.trim()) ? 'Provider name must be 2-50 characters and contain only letters and spaces' : null
+  };
+};
+
+export const validateSwiftCode = (swiftCode) => {
+  const sanitizedSwift = sanitizeInput(swiftCode);
+  
+  if (!validateSQLInput(sanitizedSwift)) {
+    return {
+      isValid: false,
+      error: 'Invalid characters detected in SWIFT code'
+    };
+  }
+  
+  // SWIFT code format: 8 or 11 characters (letters and numbers)
+  const swiftRegex = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+  return {
+    isValid: swiftRegex.test(sanitizedSwift.toUpperCase()),
+    error: !swiftRegex.test(sanitizedSwift.toUpperCase()) ? 'SWIFT code must be 8 or 11 characters (e.g., SBZAZAJJ or SBZAZAJJXXX)' : null
+  };
+};
+
+export const validatePaymentForm = (formData) => {
+  const errors = {};
+  let isValid = true;
+
+  // Amount validation
+  const amountValidation = validateAmount(formData.amount);
+  if (!amountValidation.isValid) {
+    errors.amount = amountValidation.error;
+    isValid = false;
+  }
+
+  // Currency validation
+  const currencyValidation = validateCurrency(formData.currency);
+  if (!currencyValidation.isValid) {
+    errors.currency = currencyValidation.error;
+    isValid = false;
+  }
+
+  // Recipient validation
+  const recipientValidation = validateRecipient(formData.recipient);
+  if (!recipientValidation.isValid) {
+    errors.recipient = recipientValidation.error;
+    isValid = false;
+  }
+
+  // Provider validation
+  const providerValidation = validateProvider(formData.provider);
+  if (!providerValidation.isValid) {
+    errors.provider = providerValidation.error;
+    isValid = false;
+  }
+
+  // SWIFT code validation
+  const swiftValidation = validateSwiftCode(formData.swiftCode);
+  if (!swiftValidation.isValid) {
+    errors.swiftCode = swiftValidation.error;
+    isValid = false;
+  }
+
+  return { isValid, errors };
+};

@@ -6,6 +6,7 @@ import SignUp from './pages/SignUp';
 import SignIn from './pages/SignIn';
 import './App.css';
 import PaymentPage from './components/PaymentPage';
+import TransactionConfirmation from './components/TransactionConfirmation';
 import PaymentSuccess from './components/PaymentSuccess';
 import TransactionDashboard from './components/TransactionDashboard';
 import TransactionHistory from './components/TransactionHistory';
@@ -22,6 +23,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/confirmation" element={<TransactionConfirmation />} />
           <Route path="/success" element={<PaymentSuccess />} />
           <Route path="/TransactionDashboard" element={
             <ProtectedRoute requireEmployee={true}>

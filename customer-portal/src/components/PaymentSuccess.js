@@ -1,7 +1,31 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './PaymentSuccess.css';
 
 const PaymentSuccess = ({ currentPage, setCurrentPage }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const transactionData = location.state?.transactionData;
+
+  // If no transaction data, redirect back to payment page
+  React.useEffect(() => {
+    if (!transactionData) {
+      navigate('/payment');
+    }
+  }, [transactionData, navigate]);
+
+  if (!transactionData) {
+    return null;
+  }
+
+  const handleMakeAnotherPayment = () => {
+    navigate('/payment');
+  };
+
+  const handleViewHistory = () => {
+    navigate('/TransactionHistory');
+  };
+
   return (
     <div className="success-page">
       {/* Header */}
@@ -58,19 +82,27 @@ const PaymentSuccess = ({ currentPage, setCurrentPage }) => {
           <div className="transaction-details">
             <div className="detail-row">
               <span className="detail-label">Transaction Number:</span>
-              <span className="detail-value">#1234532</span>
+              <span className="detail-value">{transactionData.transactionId}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Amount:</span>
-              <span className="detail-value">R100.00</span>
+              <span className="detail-value">{transactionData.currency} {transactionData.amount}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Recipient:</span>
+              <span className="detail-value">{transactionData.recipient}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Provider:</span>
+              <span className="detail-value">{transactionData.provider}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Date:</span>
-              <span className="detail-value">September 26, 2025</span>
+              <span className="detail-value">{new Date(transactionData.timestamp).toLocaleDateString()}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Status:</span>
-              <span className="detail-value">Completed</span>
+              <span className="detail-value success-status">{transactionData.status}</span>
             </div>
           </div>
           
@@ -78,13 +110,13 @@ const PaymentSuccess = ({ currentPage, setCurrentPage }) => {
           <div className="action-buttons">
             <button 
               className="primary-button"
-              onClick={() => setCurrentPage('history')}
+              onClick={handleViewHistory}
             >
               View Transaction History
             </button>
             <button 
               className="secondary-button"
-              onClick={() => setCurrentPage('payment')}
+              onClick={handleMakeAnotherPayment}
             >
               Make Another Payment
             </button>
