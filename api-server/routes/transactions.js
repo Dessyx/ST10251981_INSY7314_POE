@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 
 // POST a new transaction
 router.post('/', async (req, res) => {
-    const { user_id, amount, currency, description } = req.body;
+    const { user_id, amount, currency } = req.body;
 
     // Check required fields
     if (!user_id || !amount || !currency) {
@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
             user_id,
             amount,
             currency,
-            description: description || "" // optional
+            
         });
         res.status(201).json(newTransaction);
     } catch (err) {

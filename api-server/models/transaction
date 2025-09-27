@@ -1,28 +1,25 @@
 // models/transaction.js
+
 const db = require('../database');
 
 class Transaction {
-  static getAll() {
-    return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM transactions', [], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
+  static async getAll() {
+    return db('transactions').select('*');
   }
 
-  static create({ user_id, amount, currency, swift_code = null, recipient_name = null, status = null }) {
-    return new Promise((resolve, reject) => {
-      const query = `
-        INSERT INTO transactions (user_id, amount, currency, swift_code, recipient_name, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      `;
-      const params = [user_id, amount, currency, swift_code, recipient_name, status];
-      db.run(query, params, function(err) {
-        if (err) reject(err);
-        else resolve({ id: this.lastID, user_id, amount, currency, swift_code, recipient_name, status, created_at: new Date(), updated_at: new Date() });
-      });
+  static async create({ user_id, amount, currency, swift_code = null, recipient_name = null, status = null, description = "" }) {
+    const [id] = await db('transactions').insert({
+      user_id,
+      amount,
+      currency,
+      swift_code,
+      recipient_name,
+      status,
+      description,
+      created_at: db.fn.now(),
+      updated_at: db.fn.now()
     });
+    return db('transactions').where({ id }).first();
   }
 }
 
