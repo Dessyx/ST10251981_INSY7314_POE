@@ -11,7 +11,9 @@ const PEPPER = process.env.PEPPER || '';
 // Registration schema
 const registrationSchema = Joi.object({
   full_name: Joi.string().min(2).max(100).required(),
-  id_number: Joi.string().min(10).max(20).required(),
+  id_number: Joi.string().pattern(/^\d{8,12}$/).required().messages({
+    'string.pattern.base': 'ID number must be 8-12 digits'
+  }),
   account_number: Joi.string().min(8).max(20).required(),
   username: Joi.string().min(3).max(50).required(),
   password: Joi.string().min(8).max(128).required(),
@@ -20,19 +22,22 @@ const registrationSchema = Joi.object({
 
 router.post('/register', async (req, res) => {
   const { error, value } = registrationSchema.validate(req.body);
-  if (error) return res.status(400).json({ error: 'Invalid input provided' });
+  if (error) {
+    const errorMessage = error.details[0].message || 'Invalid input provided';
+    return res.status(400).json({ error: errorMessage });
+  }
 
   // Check if username already exists
   const existingUsername = await userModel.getUserByUsername(value.username);
-  if (existingUsername) return res.status(400).json({ error: 'Invalid input provided' });
+  if (existingUsername) return res.status(400).json({ error: 'Username already exists' });
 
   // Check if account number already exists
   const existingAccount = await userModel.getUserByAccountNumber(value.account_number);
-  if (existingAccount) return res.status(400).json({ error: 'Invalid input provided' });
+  if (existingAccount) return res.status(400).json({ error: 'Account number already exists' });
 
   // Check if ID number already exists
   const existingId = await userModel.getUserByIdNumber(value.id_number);
-  if (existingId) return res.status(400).json({ error: 'Invalid input provided' });
+  if (existingId) return res.status(400).json({ error: 'ID number already exists' });
 
   const userId = await userModel.createUser(value);
   
@@ -70,7 +75,13 @@ router.post('/login', async (req, res) => {
     role: user.role || 'customer' 
   }, JWT_SECRET, { expiresIn: '1h' });
   
-  res.json({ token, role: user.role || 'customer' });
+  res.json({ 
+    token, 
+    role: user.role || 'customer',
+    userId: user.id,
+    username: user.username,
+    fullName: user.full_name
+  });
 });
 
 module.exports = router;

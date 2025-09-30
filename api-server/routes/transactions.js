@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
     try {
         const { user_id, status, limit = 50, offset = 0 } = req.query;
         
-        let transactions = await Transaction.getAll();
+        let transactions = await Transaction.getAllWithUsers();
         
         // Filter by user if specified
         if (user_id) {
@@ -117,7 +117,7 @@ router.post('/', paymentLimiter, validateTransaction, async (req, res) => {
 // PATCH update transaction status
 router.patch('/:id', [
     param('id').isInt({ min: 1 }).withMessage('Invalid transaction ID'),
-    body('status').isIn(['pending', 'completed', 'failed', 'cancelled']).withMessage('Invalid status')
+    body('status').isIn(['pending', 'verified', 'completed', 'failed', 'cancelled']).withMessage('Invalid status')
 ], async (req, res) => {
     try {
         const errors = validationResult(req);
