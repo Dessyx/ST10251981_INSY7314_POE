@@ -79,7 +79,8 @@ class PaymentService {
       errors.provider = 'Provider name is required';
     }
     
-    if (!paymentData.swiftCode || !/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(paymentData.swiftCode)) {
+    const swiftCode = paymentData.swift_code || paymentData.swiftCode;
+    if (!swiftCode || !/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(swiftCode)) {
       errors.swiftCode = 'Invalid SWIFT code format';
     }
     
@@ -91,12 +92,13 @@ class PaymentService {
 
   // Sanitize payment data for security
   static sanitizePaymentData(paymentData) {
+    const swiftCode = paymentData.swiftCode || paymentData.swift_code || '';
     return {
       amount: parseFloat(paymentData.amount),
       currency: paymentData.currency.toUpperCase(),
       recipient: paymentData.recipient.trim(),
       provider: paymentData.provider.trim(),
-      swift_code: paymentData.swiftCode.toUpperCase(),
+      swift_code: swiftCode.toUpperCase().replace(/\s+/g, ''), // Remove any spaces
       description: paymentData.description ? paymentData.description.trim() : '',
       user_id: paymentData.userId || 1, // Default user for demo
     };

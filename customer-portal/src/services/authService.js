@@ -77,14 +77,20 @@ export const authService = {
         password: credentials.password,
       });
       
-      const { token, role } = response.data;
+      const { token, role, userId, username, fullName } = response.data;
       localStorage.setItem('authToken', token);
       localStorage.setItem('userRole', role);
+      localStorage.setItem('userId', userId);
+      localStorage.setItem('username', username);
+      localStorage.setItem('fullName', fullName);
       
       return {
         success: true,
         token,
         role,
+        userId,
+        username,
+        fullName,
         message: 'Login successful!'
       };
     } catch (error) {
@@ -100,6 +106,9 @@ export const authService = {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('fullName');
     window.location.href = '/signin';
   },
 
@@ -116,6 +125,21 @@ export const authService = {
   // Get user role
   getUserRole() {
     return localStorage.getItem('userRole') || 'customer';
+  },
+
+  // Get current user ID
+  getCurrentUserId() {
+    return localStorage.getItem('userId');
+  },
+
+  // Get current user info
+  getCurrentUser() {
+    return {
+      id: this.getCurrentUserId(),
+      username: localStorage.getItem('username'),
+      fullName: localStorage.getItem('fullName'),
+      role: this.getUserRole()
+    };
   },
 
   // Check if user is employee

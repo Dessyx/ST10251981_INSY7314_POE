@@ -29,7 +29,16 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
   // Load edit data if available
   useEffect(() => {
     if (editData) {
-      setFormData(editData);
+      // Convert sanitized data back to form format
+      const formCompatibleData = {
+        amount: editData.amount || '',
+        currency: editData.currency || 'ZAR',
+        recipient: editData.recipient || '',
+        provider: editData.provider || '',
+        swiftCode: editData.swift_code || editData.swiftCode || '', // Handle both property names
+        description: editData.description || ''
+      };
+      setFormData(formCompatibleData);
     }
   }, [editData]);
 
@@ -113,19 +122,17 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
 
     try {
       // Prepare payment data for API
-      const paymentData = PaymentService.sanitizePaymentData({
+      const sanitizedData = PaymentService.sanitizePaymentData({
         ...formData,
         amount: parseFloat(formData.amount).toFixed(2),
         userId: 1 // Default user ID for demo
       });
 
+
       // Navigate to confirmation page with form data
       navigate('/confirmation', { 
         state: { 
-          paymentData: {
-            ...formData,
-            amount: parseFloat(formData.amount).toFixed(2)
-          }
+          paymentData: sanitizedData
         } 
       });
     } catch (error) {
@@ -137,7 +144,12 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
 
   // Check if form is valid
   const isFormValid = Object.values(errors).every(error => !error) && 
-                     Object.values(formData).every(value => value.trim() !== '');
+                     Object.values(formData).every(value => {
+                       if (typeof value === 'string') {
+                         return value.trim() !== '';
+                       }
+                       return value !== '' && value != null;
+                     });
 
   return (
     <div className="payment-page">

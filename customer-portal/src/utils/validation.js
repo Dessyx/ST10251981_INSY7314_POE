@@ -1,5 +1,5 @@
 // Validation utility functions for forms
-import { sanitizeInput, validateSQLInput, encodeHTML } from './security';
+import { sanitizeInput, validateSQLInput } from './security';
 
 export const validateEmail = (email) => {
   const sanitizedEmail = sanitizeInput(email);
@@ -101,9 +101,10 @@ export const validateUsername = (username) => {
 };
 
 export const validateRequired = (value, fieldName) => {
+  const stringValue = typeof value === 'string' ? value : String(value || '');
   return {
-    isValid: value.trim().length > 0,
-    error: value.trim().length === 0 ? `${fieldName} is required` : null
+    isValid: stringValue.trim().length > 0,
+    error: stringValue.trim().length === 0 ? `${fieldName} is required` : null
   };
 };
 

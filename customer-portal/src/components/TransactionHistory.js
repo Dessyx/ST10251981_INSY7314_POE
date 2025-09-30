@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './TransactionHistory.css';
 import PaymentService from '../services/paymentService';
+import { authService } from '../services/authService';
 
 const TransactionHistory = ({ currentPage, setCurrentPage }) => {
   const navigate = useNavigate();
@@ -10,6 +11,11 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Handle logout
+  const handleLogout = () => {
+    authService.logout();
+  };
+
   // Fetch transactions from API
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -17,8 +23,9 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
         setLoading(true);
         setError('');
         
-        // Get transactions for user (defaulting to user ID 1 for demo)
-        const response = await PaymentService.getTransactions(1);
+        // Get transactions for current user
+        const currentUserId = authService.getCurrentUserId();
+        const response = await PaymentService.getTransactions(currentUserId);
         setTransactions(response.transactions || response);
       } catch (err) {
         console.error('Failed to fetch transactions:', err);
@@ -58,6 +65,14 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
         <div className="header-content">
           <div className="header-left">
             <h1 className="logo">PayNow</h1>
+          </div>
+          <div className="header-right">
+            <button 
+              className="logout-button"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
           </div>
         </div>
       </header>

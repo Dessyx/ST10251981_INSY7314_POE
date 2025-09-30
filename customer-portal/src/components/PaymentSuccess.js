@@ -46,7 +46,11 @@ const PaymentSuccess = ({ currentPage, setCurrentPage }) => {
           </div>
           
           {/* Success Message */}
-          <h2 className="success-title">Payment Successful!</h2>
+          <h2 className="success-title">Payment Submitted!</h2>
+          <p className="success-message">
+            Your payment has been submitted and is pending employee review. 
+            You will be notified once the transaction is processed.
+          </p>
           
           {/* Transaction Details */}
           <div className="transaction-details">

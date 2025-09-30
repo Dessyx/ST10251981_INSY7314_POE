@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './TransactionConfirmation.css';
 import PaymentService from '../services/paymentService';
+import { authService } from '../services/authService';
 
 const TransactionConfirmation = () => {
   const navigate = useNavigate();
@@ -37,24 +38,19 @@ const TransactionConfirmation = () => {
       // Sanitize and prepare data for API
       const sanitizedData = PaymentService.sanitizePaymentData({
         ...paymentData,
-        userId: 1 // Default user ID for demo
+        swiftCode: paymentData.swift_code || paymentData.swiftCode, // Handle both property names
+        userId: authService.getCurrentUserId() || 1 // Use actual user ID, fallback to 1 for demo
       });
 
-      // Create transaction in the database
+      // Create transaction in the database (status will be 'pending' by default)
       const createdTransaction = await PaymentService.createTransaction(sanitizedData);
-      
-      // Update transaction status to completed (simulating successful payment)
-      const completedTransaction = await PaymentService.updateTransactionStatus(
-        createdTransaction.id, 
-        'completed'
-      );
 
       // Prepare transaction data for success page
       const transactionData = {
-        ...completedTransaction,
-        transactionId: `TXN${completedTransaction.id.toString().padStart(6, '0')}`,
-        timestamp: completedTransaction.created_at,
-        status: 'completed',
+        ...createdTransaction,
+        transactionId: `TXN${createdTransaction.id.toString().padStart(6, '0')}`,
+        timestamp: createdTransaction.created_at,
+        status: 'pending', // Status is pending until employee review
         recipient: paymentData.recipient,
         provider: paymentData.provider
       };
@@ -105,22 +101,22 @@ const TransactionConfirmation = () => {
             
             <div className="detail-row">
               <span className="detail-label">Amount:</span>
-              <span className="detail-value amount">{paymentData.currency} {parseFloat(paymentData.amount).toFixed(2)}</span>
+              <span className="detail-value amount">{paymentData.currency || ''} {parseFloat(paymentData.amount || 0).toFixed(2)}</span>
             </div>
             
             <div className="detail-row">
               <span className="detail-label">Recipient:</span>
-              <span className="detail-value">{paymentData.recipient}</span>
+              <span className="detail-value">{paymentData.recipient || ''}</span>
             </div>
             
             <div className="detail-row">
               <span className="detail-label">Provider:</span>
-              <span className="detail-value">{paymentData.provider}</span>
+              <span className="detail-value">{paymentData.provider || ''}</span>
             </div>
             
             <div className="detail-row">
               <span className="detail-label">SWIFT Code:</span>
-              <span className="detail-value">{paymentData.swiftCode.toUpperCase()}</span>
+              <span className="detail-value">{(paymentData.swift_code || paymentData.swiftCode || '').toUpperCase()}</span>
             </div>
             
             <div className="detail-row">

@@ -74,6 +74,26 @@
   gap: 1rem;
 }
 
+.logout-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+.logout-button:active {
+  background-color: #bd2130;
+}
+
 /* Main Content */
 .main-content {
   padding: 2rem;
@@ -299,6 +319,11 @@
 .transaction-status.pending {
   background: #fff3cd;
   color: #856404;
+}
+
+.transaction-status.verified {
+  background: #cce5ff;
+  color: #004085;
 }
 
 .transaction-status.failed {
