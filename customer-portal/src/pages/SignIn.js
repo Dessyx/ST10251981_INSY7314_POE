@@ -72,8 +72,9 @@ const SignIn = () => {
         setErrors({});
         setTouched({});
         
-        // Redirect based on user role
-        if (result.role === 'employee') {
+        // Redirect based on user role (role is now in result.user.role)
+        const userRole = result.user?.role || authService.getUserRole();
+        if (userRole === 'employee') {
           navigate('/TransactionDashboard');
         } else {
           navigate('/TransactionHistory');

@@ -1,7 +1,8 @@
 // Payment Service for API Integration
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+// Updated to use HTTPS for secure communication
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://localhost:4000';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -10,7 +11,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest', // CSRF protection
   },
-  withCredentials: true, // Include cookies for session management
+  withCredentials: true, // REQUIRED for HTTPOnly cookies - automatically sends cookies
 });
 
 class PaymentService {

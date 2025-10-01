@@ -45,7 +45,7 @@ export const getClientIdentifier = () => {
     new Date().getTimezoneOffset().toString()
   ];
   
-  // Create a simple hash (in production, use a proper hashing library)
+
   let hash = 0;
   const str = factors.join('|');
   for (let i = 0; i < str.length; i++) {
@@ -264,8 +264,7 @@ export const getRateLimitStatus = (type) => {
   };
 };
 
-// Reset rate limit (for testing purposes)
+// Reset rate limit 
 export const resetRateLimit = (type) => {
-  // This would typically be done server-side
   console.log(`Rate limit reset for type: ${type}`);
 };

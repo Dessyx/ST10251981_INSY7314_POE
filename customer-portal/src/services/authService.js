@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:4000';
+// HTTPS for secure communication
+const API_BASE_URL = 'https://localhost:4000';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -9,32 +10,25 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest', // CSRF protection header
   },
-  withCredentials: true, // Include cookies for session management
+  withCredentials: true, 
 });
-
-// Add request interceptor to include auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // Add response interceptor to handle auth errors
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      window.location.href = '/signin';
+      // Token expired or invalid - cookie will be cleared by server
+      // Clear any localStorage data
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('fullName');
+      
+      // Only redirect if not already on signin page
+      if (!window.location.pathname.includes('/signin') && !window.location.pathname.includes('/signup')) {
+        window.location.href = '/signin';
+      }
     }
     return Promise.reject(error);
   }
@@ -52,12 +46,15 @@ export const authService = {
         password: userData.password,
       });
       
-      const { token } = response.data;
-      localStorage.setItem('authToken', token);
+      const { user } = response.data;
+      
+      localStorage.setItem('userRole', user.role);
+      localStorage.setItem('userId', user.id);
+      localStorage.setItem('username', user.username);
       
       return {
         success: true,
-        token,
+        user,
         message: 'Registration successful!'
       };
     } catch (error) {
@@ -77,20 +74,16 @@ export const authService = {
         password: credentials.password,
       });
       
-      const { token, role, userId, username, fullName } = response.data;
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userRole', role);
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('username', username);
-      localStorage.setItem('fullName', fullName);
+      const { user } = response.data;
+      
+      localStorage.setItem('userRole', user.role);
+      localStorage.setItem('userId', user.userId);
+      localStorage.setItem('username', user.username);
+      localStorage.setItem('fullName', user.fullName);
       
       return {
         success: true,
-        token,
-        role,
-        userId,
-        username,
-        fullName,
+        user,
         message: 'Login successful!'
       };
     } catch (error) {
@@ -102,24 +95,27 @@ export const authService = {
   },
 
   // Logout user
-  logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+  async logout() {
+    try {
+      // Call logout endpoint to clear HTTPOnly cookie
+      await apiClient.post('/users/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Continue with logout even if API call fails
+    }
+    
+    // Clear localStorage
     localStorage.removeItem('userRole');
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
     localStorage.removeItem('fullName');
+    
     window.location.href = '/signin';
   },
 
   // Check if user is authenticated
   isAuthenticated() {
-    return !!localStorage.getItem('authToken');
-  },
-
-  // Get current token
-  getToken() {
-    return localStorage.getItem('authToken');
+    return !!localStorage.getItem('userId');
   },
 
   // Get user role
@@ -145,6 +141,17 @@ export const authService = {
   // Check if user is employee
   isEmployee() {
     return this.getUserRole() === 'employee';
+  },
+
+  // Verify authentication with server
+  async verifyAuth() {
+    try {
+      // This will use the HTTPOnly cookie automatically
+      const response = await apiClient.get('/users/verify');
+      return response.data.authenticated === true;
+    } catch (error) {
+      return false;
+    }
   }
 };
 

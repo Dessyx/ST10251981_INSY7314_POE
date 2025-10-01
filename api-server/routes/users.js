@@ -42,7 +42,26 @@ router.post('/register', async (req, res) => {
   const userId = await userModel.createUser(value);
   
   const token = jwt.sign({ id: userId, username: value.username, role: 'customer' }, JWT_SECRET, { expiresIn: '1h' });
-  res.status(201).json({ token });
+  
+  // Set HTTPOnly, Secure, and SameSite cookie
+  res.cookie('authToken', token, {
+    httpOnly: true,        // Prevents JavaScript access (XSS protection)
+    secure: true,          // Only sent over HTTPS
+    sameSite: 'strict',    // CSRF protection
+    maxAge: 3600000,       // 1 hour in milliseconds
+    path: '/',
+    domain: 'localhost'
+  });
+
+  res.status(201).json({ 
+    success: true,
+    message: 'Registration successful',
+    user: {
+      id: userId,
+      username: value.username,
+      role: 'customer'
+    }
+  });
 });
 
 
@@ -75,13 +94,61 @@ router.post('/login', async (req, res) => {
     role: user.role || 'customer' 
   }, JWT_SECRET, { expiresIn: '1h' });
   
-  res.json({ 
-    token, 
-    role: user.role || 'customer',
-    userId: user.id,
-    username: user.username,
-    fullName: user.full_name
+  // Set HTTPOnly, Secure, and SameSite cookie
+  res.cookie('authToken', token, {
+    httpOnly: true,        // Prevents JavaScript access (XSS protection)
+    secure: true,          // Only sent over HTTPS
+    sameSite: 'strict',    // CSRF protection
+    maxAge: 3600000,       // 1 hour in milliseconds
+    path: '/',
+    domain: 'localhost'
   });
+  
+  res.json({ 
+    success: true,
+    message: 'Login successful',
+    user: {
+      role: user.role || 'customer',
+      userId: user.id,
+      username: user.username,
+      fullName: user.full_name
+    }
+  });
+});
+
+// Logout endpoint to clear the cookie
+router.post('/logout', (req, res) => {
+  res.clearCookie('authToken', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    path: '/',
+    domain: 'localhost'
+  });
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// Verify authentication endpoint
+router.get('/verify', (req, res) => {
+  try {
+    const token = req.cookies.authToken;
+    
+    if (!token) {
+      return res.json({ authenticated: false });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    res.json({ 
+      authenticated: true,
+      user: {
+        id: decoded.id,
+        username: decoded.username,
+        role: decoded.role || 'customer'
+      }
+    });
+  } catch (error) {
+    res.json({ authenticated: false });
+  }
 });
 
 module.exports = router;
