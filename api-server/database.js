@@ -3,12 +3,11 @@ const path = require('path');
 
 const dbPath = path.resolve(__dirname, 'database.db');
 
-// Knex configuration
+// Knex configuration 
 const db = knex({
   client: 'sqlite3',
   connection: {
     filename: dbPath,
-    
   },
   useNullAsDefault: true,
   pool: {
