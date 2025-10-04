@@ -36,10 +36,12 @@ const TransactionConfirmation = () => {
       }
 
       // Sanitize and prepare data for API
+      const currentUserId = authService.getCurrentUserId();
+      console.log('Creating transaction for user ID:', currentUserId);
       const sanitizedData = PaymentService.sanitizePaymentData({
         ...paymentData,
         swiftCode: paymentData.swift_code || paymentData.swiftCode, // Handle both property names
-        userId: authService.getCurrentUserId() || 1 // Use actual user ID, fallback to 1 for demo
+        userId: parseInt(currentUserId) || 1 // Convert to integer, fallback to 1 for demo
       });
 
       // Create transaction in the database (status will be 'pending' by default)

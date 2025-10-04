@@ -4,6 +4,7 @@ import './PaymentPage.css';
 import paymentIcon from '../assets/payment-icon.png';
 import { validatePaymentForm, validateAmount, validateCurrency, validateRecipient, validateProvider, validateSwiftCode } from '../utils/validation';
 import PaymentService from '../services/paymentService';
+import { authService } from '../services/authService';
 
 const PaymentPage = ({ currentPage, setCurrentPage }) => {
   const navigate = useNavigate();
@@ -125,7 +126,7 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
       const sanitizedData = PaymentService.sanitizePaymentData({
         ...formData,
         amount: parseFloat(formData.amount).toFixed(2),
-        userId: 1 // Default user ID for demo
+        userId: authService.getCurrentUserId() // Use actual logged-in user ID
       });
 
 

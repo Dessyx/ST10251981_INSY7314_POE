@@ -101,7 +101,7 @@ class PaymentService {
       provider: paymentData.provider.trim(),
       swift_code: swiftCode.toUpperCase().replace(/\s+/g, ''), // Remove any spaces
       description: paymentData.description ? paymentData.description.trim() : '',
-      user_id: paymentData.userId || 1, // Default user for demo
+      user_id: parseInt(paymentData.userId) || parseInt(paymentData.user_id) || 1, // Convert to integer
     };
   }
 }

@@ -25,7 +25,8 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
         
         // Get transactions for current user
         const currentUserId = authService.getCurrentUserId();
-        const response = await PaymentService.getTransactions(currentUserId);
+        console.log('Current user ID:', currentUserId, 'Type:', typeof currentUserId);
+        const response = await PaymentService.getTransactions(parseInt(currentUserId));
         setTransactions(response.transactions || response);
       } catch (err) {
         console.error('Failed to fetch transactions:', err);
