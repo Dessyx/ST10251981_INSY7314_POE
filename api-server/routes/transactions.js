@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult, param } = require('express-validator');
 const Transaction = require('../models/transaction');
-const { paymentLimiter } = require('../middleware/security');
+const { paymentLimiter, historyLimiter } = require('../middleware/security');
 
 // Input validation middleware for creating a transaction
 const validateTransaction = [
@@ -27,7 +27,7 @@ const validateTransaction = [
 ];
 
 // GET all transactions
-router.get('/', async (req, res) => {
+router.get('/', historyLimiter, async (req, res) => {
   try {
     const { user_id, status, limit = 50, offset = 0 } = req.query;
 
@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET a specific transaction by ID
-router.get('/:id', [
+router.get('/:id', historyLimiter, [
   param('id').isInt({ min: 1 }).withMessage('Invalid transaction ID')
 ], async (req, res) => {
   try {

@@ -11,33 +11,38 @@ import PaymentSuccess from './components/PaymentSuccess';
 import TransactionDashboard from './components/TransactionDashboard';
 import TransactionHistory from './components/TransactionHistory';
 import ProtectedRoute from './components/ProtectedRoute';
+import { SecurityProvider } from './components/SecurityProvider';
+import SessionTimeoutWarning from './components/SessionTimeoutWarning';
 
 function App() {
 
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<Homepage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/payment" element={<PaymentPage />} />
-          <Route path="/confirmation" element={<TransactionConfirmation />} />
-          <Route path="/success" element={<PaymentSuccess />} />
-          <Route path="/TransactionDashboard" element={
-            <ProtectedRoute requireEmployee={true}>
-              <TransactionDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/TransactionHistory" element={
-            <ProtectedRoute>
-              <TransactionHistory />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </div>
-    </Router>
+    <SecurityProvider>
+      <Router>
+        <div className="App">
+          <SessionTimeoutWarning />
+          <Routes>
+            <Route path="/" element={<Homepage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/confirmation" element={<TransactionConfirmation />} />
+            <Route path="/success" element={<PaymentSuccess />} />
+            <Route path="/TransactionDashboard" element={
+              <ProtectedRoute requireEmployee={true}>
+                <TransactionDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/TransactionHistory" element={
+              <ProtectedRoute>
+                <TransactionHistory />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </div>
+      </Router>
+    </SecurityProvider>
   );
 }
 

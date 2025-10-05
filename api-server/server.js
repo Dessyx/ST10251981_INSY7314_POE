@@ -20,6 +20,7 @@ const usersRouter = require('./routes/users');
 const { 
   paymentLimiter, 
   historyLimiter, 
+  employeeLimiter,
   sanitizeInput, 
   csrfProtection, 
   requestLogger, 
@@ -82,7 +83,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Routes
 
-app.use('/transactions', historyLimiter, transactionsRouter);
+app.use('/transactions', employeeLimiter, transactionsRouter);
 app.use('/users', usersRouter);
 
 // Health check endpoint

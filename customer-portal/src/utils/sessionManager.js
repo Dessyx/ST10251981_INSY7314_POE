@@ -17,6 +17,14 @@ class SessionManager {
     // Check for existing session
     this.sessionToken = secureStorage.getItem('sessionToken');
     this.csrfToken = secureStorage.getItem('csrfToken');
+    this.lastActivity = secureStorage.getItem('lastActivity') || Date.now();
+    
+    // If user is authenticated but no lastActivity, set it to now
+    const userId = localStorage.getItem('userId');
+    if (userId && !this.lastActivity) {
+      this.lastActivity = Date.now();
+      secureStorage.setItem('lastActivity', this.lastActivity);
+    }
     
     if (this.sessionToken && !validateSessionToken(this.sessionToken)) {
       this.clearSession();
@@ -43,10 +51,13 @@ class SessionManager {
 
   // Validate current session
   validateSession() {
-    if (!this.sessionToken || !validateSessionToken(this.sessionToken)) {
+    // Check if user is authenticated via localStorage (auth service)
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
       return false;
     }
     
+    // Check session timeout based on last activity
     const now = Date.now();
     if (now - this.lastActivity > this.sessionTimeout) {
       this.clearSession();
@@ -68,6 +79,12 @@ class SessionManager {
     secureStorage.removeItem('csrfToken');
     secureStorage.removeItem('lastActivity');
     
+    // Clear auth service data
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('fullName');
+    
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
@@ -83,6 +100,9 @@ class SessionManager {
     this.heartbeatInterval = setInterval(() => {
       if (!this.validateSession()) {
         this.handleSessionExpired();
+      } else {
+        // Check for warning time (5 minutes before expiry)
+        this.checkSessionWarning();
       }
     }, 60000); // Check every minute
   }
@@ -94,6 +114,10 @@ class SessionManager {
     const updateActivity = () => {
       this.lastActivity = Date.now();
       secureStorage.setItem('lastActivity', this.lastActivity);
+      
+      // Hide warning if user is active
+      const hideWarningEvent = new CustomEvent('hideSessionWarning');
+      window.dispatchEvent(hideWarningEvent);
     };
     
     events.forEach(event => {
@@ -101,9 +125,38 @@ class SessionManager {
     });
   }
 
+  // Check for session warning (5 minutes before expiry)
+  checkSessionWarning() {
+    if (!this.lastActivity) return;
+    
+    const now = Date.now();
+    const timeRemaining = this.sessionTimeout - (now - this.lastActivity);
+    const warningTime = 5 * 60 * 1000; // 5 minutes
+    
+    if (timeRemaining <= warningTime && timeRemaining > 0) {
+      // Dispatch warning event
+      const warningEvent = new CustomEvent('sessionWarning', {
+        detail: {
+          message: 'Your session will expire in 5 minutes. Click "Extend Session" to continue.',
+          timeRemaining: timeRemaining
+        }
+      });
+      window.dispatchEvent(warningEvent);
+    }
+  }
+
   // Handle session expiration
   handleSessionExpired() {
     this.clearSession();
+    
+    // Dispatch session expired event
+    const expiredEvent = new CustomEvent('sessionExpired', {
+      detail: {
+        message: 'Your session has expired. Please log in again.'
+      }
+    });
+    window.dispatchEvent(expiredEvent);
+    
     alert('Your session has expired. Please log in again.');
     window.location.href = '/signin';
   }

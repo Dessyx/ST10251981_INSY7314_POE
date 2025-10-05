@@ -27,6 +27,19 @@ const historyLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Employee operations rate limiting (more lenient for admin tasks)
+const employeeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 employee operations per windowMs
+  message: {
+    error: 'Too many employee operations from this IP, please try again later.',
+    retryAfter: Math.ceil(15 * 60 * 1000 / 1000)
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful requests
+});
+
 // Input sanitization middleware
 const sanitizeInput = (req, res, next) => {
   // Remove potentially dangerous characters from string inputs
@@ -122,6 +135,7 @@ const securityHeaders = (req, res, next) => {
 module.exports = {
   paymentLimiter,
   historyLimiter,
+  employeeLimiter,
   sanitizeInput,
   csrfProtection,
   requestLogger,

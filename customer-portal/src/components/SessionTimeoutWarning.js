@@ -20,12 +20,19 @@ const SessionTimeoutWarning = () => {
       // The session manager will handle redirect
     };
 
+    // Listen for hide warning events
+    const handleHideWarning = () => {
+      setShowWarning(false);
+    };
+
     window.addEventListener('sessionWarning', handleSessionWarning);
     window.addEventListener('sessionExpired', handleSessionExpired);
+    window.addEventListener('hideSessionWarning', handleHideWarning);
 
     return () => {
       window.removeEventListener('sessionWarning', handleSessionWarning);
       window.removeEventListener('sessionExpired', handleSessionExpired);
+      window.removeEventListener('hideSessionWarning', handleHideWarning);
     };
   }, []);
 
