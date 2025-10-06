@@ -53,8 +53,10 @@ class SessionManager {
   validateSession() {
     // Check if user is authenticated via localStorage (auth service)
     const userId = localStorage.getItem('userId');
+    // If no authenticated user, there is no session to validate yet.
+    // Avoid triggering an "expired" redirect for users on sign-up/sign-in pages.
     if (!userId) {
-      return false;
+      return true;
     }
     
     // Check session timeout based on last activity
