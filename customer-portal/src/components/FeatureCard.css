@@ -1,0 +1,42 @@
+.feature-card {
+  background-color: #F3F4F6;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: transform 0.3s ease;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.feature-card.highlighted {
+  background-color: #1E3A8A;
+  color: white;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  margin-bottom: 1rem;
+  font-size: 3rem;
+}
+
+.feature-icon-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.feature-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.feature-card.highlighted .feature-title {
+  color: white;
+}
