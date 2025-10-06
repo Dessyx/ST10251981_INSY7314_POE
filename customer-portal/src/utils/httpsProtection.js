@@ -11,8 +11,8 @@ export const initHTTPSProtection = () => {
   if (!window.isSecureContext) {
     console.warn('Application is not running in a secure context');
     // Redirect to HTTPS
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-      location.replace('https:' + window.location.href.substring(window.location.protocol.length));
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      window.location.replace('https:' + window.location.href.substring(window.location.protocol.length));
     }
   }
 };
@@ -25,9 +25,9 @@ export const validateCertificate = () => {
   
   return {
     isSecure: securityInfo.https && securityInfo.secureContext,
-    protocol: location.protocol,
-    hostname: location.hostname,
-    isLocalhost: location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+    protocol: window.location.protocol,
+    hostname: window.location.hostname,
+    isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   };
 };
 
@@ -79,7 +79,7 @@ export const fixMixedContent = () => {
 export const checkHSTS = () => {
   // In a real application, this would be checked via server headers
   // This is a client-side simulation
-  const isHTTPS = location.protocol === 'https:';
+  const isHTTPS = window.location.protocol === 'https:';
   const isSecureContext = window.isSecureContext;
   
   return {
@@ -95,7 +95,7 @@ export const validateSSL = () => {
   
   return {
     isSecure: securityInfo.https,
-    protocol: location.protocol,
+    protocol: window.location.protocol,
     secureContext: securityInfo.secureContext,
     timestamp: Date.now()
   };
@@ -104,7 +104,7 @@ export const validateSSL = () => {
 // Network security monitoring
 export const monitorNetworkSecurity = () => {
   const securityChecks = {
-    https: location.protocol === 'https:',
+    https: window.location.protocol === 'https:',
     secureContext: window.isSecureContext,
     mixedContent: detectMixedContent().length === 0,
     hsts: checkHSTS().hstsEnabled
@@ -114,7 +114,7 @@ export const monitorNetworkSecurity = () => {
   console.log('Network Security Status:', securityChecks);
   
   // Alert if security issues detected
-  if (!securityChecks.https && location.hostname !== 'localhost') {
+  if (!securityChecks.https && window.location.hostname !== 'localhost') {
     console.error('Security Warning: Not using HTTPS');
   }
   
@@ -140,7 +140,7 @@ export const initNetworkSecurity = () => {
   // Monitor for protocol changes
   window.addEventListener('beforeunload', () => {
     const securityInfo = validateSSL();
-    if (!securityInfo.isSecure && location.hostname !== 'localhost') {
+    if (!securityInfo.isSecure && window.location.hostname !== 'localhost') {
       console.warn('Leaving secure context');
     }
   });
@@ -167,7 +167,7 @@ export const initNetworkSecurity = () => {
 // API request security
 export const secureAPIRequest = (url, options = {}) => {
   // Ensure HTTPS for API requests
-  if (url.startsWith('http:') && location.protocol === 'https:') {
+  if (url.startsWith('http:') && window.location.protocol === 'https:') {
     url = url.replace('http:', 'https:');
   }
   
@@ -189,7 +189,7 @@ export const secureAPIRequest = (url, options = {}) => {
 // WebSocket security
 export const secureWebSocket = (url) => {
   // Ensure WSS for WebSocket connections
-  if (url.startsWith('ws:') && location.protocol === 'https:') {
+  if (url.startsWith('ws:') && window.location.protocol === 'https:') {
     url = url.replace('ws:', 'wss:');
   }
   

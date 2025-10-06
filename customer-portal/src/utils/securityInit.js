@@ -44,7 +44,7 @@ export const initSecurity = () => {
 // Log current security status
 export const logSecurityStatus = () => {
   const securityStatus = {
-    https: location.protocol === 'https:',
+    https: window.location.protocol === 'https:',
     secureContext: window.isSecureContext,
     sessionValid: sessionManager.isAuthenticated(),
     timestamp: new Date().toISOString()
@@ -53,7 +53,7 @@ export const logSecurityStatus = () => {
   console.log('🔒 Security Status:', securityStatus);
   
   // Warn about security issues
-  if (!securityStatus.https && location.hostname !== 'localhost') {
+  if (!securityStatus.https && window.location.hostname !== 'localhost') {
     console.warn('⚠️ Security Warning: Not using HTTPS');
   }
   
