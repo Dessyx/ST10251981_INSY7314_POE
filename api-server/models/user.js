@@ -1,4 +1,4 @@
-const knex = require('../database');
+const knex = require('../mongo');
 const bcrypt = require('bcrypt');
 
 const PEPPER = process.env.PEPPER || '';

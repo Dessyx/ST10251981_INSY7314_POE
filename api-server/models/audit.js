@@ -1,4 +1,4 @@
-const db = require('../database');
+const db = require('../mongo');
 
 const Audit = {
   log: async ({ action, entity, entity_id, user_id, before, after, ip, user_agent }) => {
