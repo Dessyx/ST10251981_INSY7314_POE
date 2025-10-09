@@ -27,12 +27,12 @@ const historyLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Employee operations rate limiting (more lenient for admin tasks)
-const employeeLimiter = rateLimit({
+// Transaction operations rate limiting (more lenient for admin tasks)
+const transactionLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 employee operations per windowMs
+  max: 100, // limit each IP to 100 transaction operations per windowMs
   message: {
-    error: 'Too many employee operations from this IP, please try again later.',
+    error: 'Too many transaction operations from this IP, please try again later.',
     retryAfter: Math.ceil(15 * 60 * 1000 / 1000)
   },
   standardHeaders: true,
@@ -135,7 +135,7 @@ const securityHeaders = (req, res, next) => {
 module.exports = {
   paymentLimiter,
   historyLimiter,
-  employeeLimiter,
+  transactionLimiter,
   sanitizeInput,
   csrfProtection,
   requestLogger,

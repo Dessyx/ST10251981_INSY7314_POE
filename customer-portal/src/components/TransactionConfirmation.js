@@ -52,7 +52,7 @@ const TransactionConfirmation = () => {
         ...createdTransaction,
         transactionId: `TXN${(createdTransaction.transaction_number || 0).toString().padStart(8, '0')}`,
         timestamp: createdTransaction.created_at,
-        status: 'pending', // Status is pending until employee review
+        status: 'pending', // Status is pending until admin review
         recipient: paymentData.recipient,
         provider: paymentData.provider
       };

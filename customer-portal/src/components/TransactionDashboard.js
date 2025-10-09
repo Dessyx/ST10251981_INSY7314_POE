@@ -14,7 +14,7 @@ const TransactionDashboard = ({ currentPage, setCurrentPage }) => {
   // Get user role to display appropriate dashboard title
   const userRole = authService.getUserRole();
   const isAdmin = userRole === 'admin';
-  const dashboardTitle = isAdmin ? 'Admin Dashboard' : 'Employee Dashboard';
+  const dashboardTitle = 'Admin Dashboard';
 
   // Fetch transactions from database
   useEffect(() => {

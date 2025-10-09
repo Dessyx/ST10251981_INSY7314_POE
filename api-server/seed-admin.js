@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
   account_number: { type: String, required: true, unique: true },
   username: { type: String, required: true, unique: true },
   password_hash: { type: String, required: true },
-  role: { type: String, enum: ['customer', 'employee', 'admin'], default: 'customer' },
+  role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
   balance: { type: Number, default: 0 }
 });
 
@@ -59,29 +59,6 @@ const seedAdmin = async () => {
     console.log('  Account Number: 999999999999');
     console.log('  Password: Admin@123!');
     console.log('  ⚠ Please change the password after first login!');
-
-    // Create employee user
-    const existingEmployee = await User.findOne({ username: 'employee' });
-    if (!existingEmployee) {
-      const employeePassword = 'Employee@123';
-      const hashedEmployeePassword = await bcrypt.hash(employeePassword + PEPPER, 10);
-
-      const employeeUser = new User({
-        full_name: 'Employee User',
-        id_number: '111111111',
-        account_number: 'EMP001',
-        username: 'employee',
-        password_hash: hashedEmployeePassword,
-        role: 'employee',
-        balance: 0
-      });
-
-      await employeeUser.save();
-      console.log('✓ Employee user created successfully');
-      console.log('  Username: employee');
-      console.log('  Account Number: EMP001');
-      console.log('  Password: Employee@123');
-    }
 
     process.exit(0);
   } catch (err) {

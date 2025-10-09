@@ -30,7 +30,7 @@ function App() {
             <Route path="/confirmation" element={<TransactionConfirmation />} />
             <Route path="/success" element={<PaymentSuccess />} />
             <Route path="/TransactionDashboard" element={
-              <ProtectedRoute requireEmployee={true}>
+              <ProtectedRoute requireAdmin={true}>
                 <TransactionDashboard />
               </ProtectedRoute>
             } />

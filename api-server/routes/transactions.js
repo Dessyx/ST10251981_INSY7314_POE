@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const Transaction = require('../models/Transaction'); 
+const Transaction = require('../models/Transaction');
+const { verifyToken } = require('../middleware/auth'); 
 
 // CREATE a new transaction
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
     const { 
       amount, 
@@ -13,10 +14,12 @@ router.post('/', async (req, res) => {
       provider, 
       swift_code, 
       description,
-      user_id,
       user_full_name,
       payment_date 
     } = req.body;
+
+    // Use authenticated user's ID for security (don't trust client-provided user_id)
+    const user_id = String(req.user.id);
 
     // Create transaction
     const transaction = new Transaction({
@@ -49,10 +52,19 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET all transactions
-router.get('/', async (req, res) => {
+// GET all transactions (filtered by user role)
+router.get('/', verifyToken, async (req, res) => {
   try {
-    const transactions = await Transaction.find().sort({ payment_date: -1 });
+    let transactions;
+    
+    // If admin, return all transactions
+    // If customer, return only their own transactions
+    if (req.user.role === 'admin') {
+      transactions = await Transaction.find().sort({ payment_date: -1 });
+    } else {
+      // Filter by user_id for customers (convert ObjectId to string)
+      transactions = await Transaction.find({ user_id: String(req.user.id) }).sort({ payment_date: -1 });
+    }
 
     const responseTransactions = transactions.map(t => ({
       ...t.toObject(),
@@ -68,11 +80,17 @@ router.get('/', async (req, res) => {
 });
 
 // GET a single transaction by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
     if (!transaction) {
       return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    // Check if user has permission to view this transaction
+    // Admins can view all, customers can only view their own
+    if (req.user.role !== 'admin' && transaction.user_id !== String(req.user.id)) {
+      return res.status(403).json({ message: 'Access denied. You can only view your own transactions.' });
     }
 
     const responseTransaction = { 
@@ -88,9 +106,14 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// UPDATE transaction status (PATCH)
-router.patch('/:id', async (req, res) => {
+// UPDATE transaction status (PATCH) - Admin only
+router.patch('/:id', verifyToken, async (req, res) => {
   try {
+    // Only admins can update transaction status
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Only admins can update transaction status.' });
+    }
+
     const { status } = req.body;
     
     // Validate status

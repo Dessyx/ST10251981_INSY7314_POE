@@ -1,6 +1,6 @@
 # PayNow - Secure Payment Portal
 
-A secure payment application with  for an internal international payment system. Customers often must make international payments via the bank’s online banking site.. A secure international payment system built with React frontend and Node.js/Express backend. Customers make payments via the banking site and employees check transactions and forward them to SWIFT for payment. 
+A secure payment application with for an internal international payment system. Customers often must make international payments via the bank’s online banking site.. A secure international payment system built with React frontend and Node.js/Express backend. Customers make payments via the banking site and employees check transactions and forward them to SWIFT for payment.
 
 ---
 

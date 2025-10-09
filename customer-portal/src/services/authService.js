@@ -138,20 +138,14 @@ export const authService = {
     };
   },
 
-  // Check if user is employee
-  isEmployee() {
-    return this.getUserRole() === 'employee';
-  },
-
   // Check if user is admin
   isAdmin() {
     return this.getUserRole() === 'admin';
   },
 
-  // Check if user can access dashboard (employee or admin)
+  // Check if user can access dashboard (admin only)
   canAccessDashboard() {
-    const role = this.getUserRole();
-    return role === 'employee' || role === 'admin';
+    return this.getUserRole() === 'admin';
   },
 
   // Verify authentication with server

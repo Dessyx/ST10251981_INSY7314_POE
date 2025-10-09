@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 
-const ProtectedRoute = ({ children, requireEmployee = false }) => {
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
   const isAuthenticated = authService.isAuthenticated();
   const canAccessDashboard = authService.canAccessDashboard();
 
@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children, requireEmployee = false }) => {
     return <Navigate to="/signin" replace />;
   }
 
-  if (requireEmployee && !canAccessDashboard) {
+  if (requireAdmin && !canAccessDashboard) {
     return <Navigate to="/" replace />;
   }
 
