@@ -151,7 +151,7 @@ const TransactionDashboard = ({ currentPage, setCurrentPage }) => {
   // Format transaction for display
   const formatTransaction = (transaction) => ({
     id: transaction.id,
-    transactionId: `TXN${transaction.id.toString().padStart(8, '0')}`,
+    transactionId: `TXN${(transaction.transaction_number || 0).toString().padStart(8, '0')}`,
     amount: `${transaction.currency} ${parseFloat(transaction.amount).toFixed(2)}`,
     recipient: transaction.user_full_name || transaction.recipient_name || 'Unknown',
     provider: transaction.provider || 'Unknown',

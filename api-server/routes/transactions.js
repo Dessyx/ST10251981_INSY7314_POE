@@ -35,10 +35,11 @@ router.post('/', async (req, res) => {
 
     const savedTransaction = await transaction.save();
 
-    // Convert _id to id for frontend
+
     const responseTransaction = { 
       ...savedTransaction.toObject(), 
-      id: savedTransaction._id 
+      id: savedTransaction._id,
+      transaction_number: savedTransaction.transaction_number
     };
 
     res.status(201).json(responseTransaction);
@@ -53,10 +54,10 @@ router.get('/', async (req, res) => {
   try {
     const transactions = await Transaction.find().sort({ payment_date: -1 });
 
-    // Map each transaction to include `id`
     const responseTransactions = transactions.map(t => ({
       ...t.toObject(),
-      id: t._id
+      id: t._id,
+      transaction_number: t.transaction_number
     }));
 
     res.status(200).json(responseTransactions);
@@ -74,10 +75,10 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Transaction not found' });
     }
 
-    // Convert _id to id
     const responseTransaction = { 
       ...transaction.toObject(), 
-      id: transaction._id 
+      id: transaction._id,
+      transaction_number: transaction.transaction_number
     };
 
     res.status(200).json(responseTransaction);
@@ -110,7 +111,8 @@ router.patch('/:id', async (req, res) => {
 
     const responseTransaction = { 
       ...transaction.toObject(), 
-      id: transaction._id 
+      id: transaction._id,
+      transaction_number: transaction.transaction_number
     };
 
     res.status(200).json(responseTransaction);

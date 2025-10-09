@@ -50,7 +50,7 @@ const TransactionConfirmation = () => {
       // Prepare transaction data for success page
       const transactionData = {
         ...createdTransaction,
-        transactionId: `TXN${createdTransaction.id.toString().padStart(8, '0')}`,
+        transactionId: `TXN${(createdTransaction.transaction_number || 0).toString().padStart(8, '0')}`,
         timestamp: createdTransaction.created_at,
         status: 'pending', // Status is pending until employee review
         recipient: paymentData.recipient,
