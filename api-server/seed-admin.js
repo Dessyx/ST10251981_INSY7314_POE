@@ -40,13 +40,13 @@ const seedAdmin = async () => {
     }
 
     const PEPPER = process.env.PEPPER || '';
-    const adminPassword = 'Admin@123'; // Change this in production!
+    const adminPassword = 'Admin@123!'; 
     const hashedPassword = await bcrypt.hash(adminPassword + PEPPER, 10);
 
     const adminUser = new User({
       full_name: 'System Administrator',
       id_number: '000000000',
-      account_number: 'ADMIN001',
+      account_number: '999999999999',
       username: 'admin',
       password_hash: hashedPassword,
       role: 'admin',
@@ -56,8 +56,8 @@ const seedAdmin = async () => {
     await adminUser.save();
     console.log('✓ Admin user created successfully');
     console.log('  Username: admin');
-    console.log('  Account Number: ADMIN001');
-    console.log('  Password: Admin@123');
+    console.log('  Account Number: 999999999999');
+    console.log('  Password: Admin@123!');
     console.log('  ⚠ Please change the password after first login!');
 
     // Create employee user

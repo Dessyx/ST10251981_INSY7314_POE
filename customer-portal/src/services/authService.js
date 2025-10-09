@@ -143,6 +143,17 @@ export const authService = {
     return this.getUserRole() === 'employee';
   },
 
+  // Check if user is admin
+  isAdmin() {
+    return this.getUserRole() === 'admin';
+  },
+
+  // Check if user can access dashboard (employee or admin)
+  canAccessDashboard() {
+    const role = this.getUserRole();
+    return role === 'employee' || role === 'admin';
+  },
+
   // Verify authentication with server
   async verifyAuth() {
     try {

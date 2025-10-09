@@ -4,13 +4,13 @@ import { authService } from '../services/authService';
 
 const ProtectedRoute = ({ children, requireEmployee = false }) => {
   const isAuthenticated = authService.isAuthenticated();
-  const isEmployee = authService.isEmployee();
+  const canAccessDashboard = authService.canAccessDashboard();
 
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
   }
 
-  if (requireEmployee && !isEmployee) {
+  if (requireEmployee && !canAccessDashboard) {
     return <Navigate to="/" replace />;
   }
 

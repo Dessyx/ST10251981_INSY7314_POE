@@ -10,6 +10,11 @@ const TransactionDashboard = ({ currentPage, setCurrentPage }) => {
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [showSubmitAllConfirm, setShowSubmitAllConfirm] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  
+  // Get user role to display appropriate dashboard title
+  const userRole = authService.getUserRole();
+  const isAdmin = userRole === 'admin';
+  const dashboardTitle = isAdmin ? 'Admin Dashboard' : 'Employee Dashboard';
 
   // Fetch transactions from database
   useEffect(() => {
@@ -164,7 +169,7 @@ const TransactionDashboard = ({ currentPage, setCurrentPage }) => {
             <h1 className="logo">PayNow</h1>
           </div>
           <div className="header-center">
-            <h2>Employee Dashboard</h2>
+            <h2>{dashboardTitle}</h2>
           </div>
           <div className="header-right">
             <button 
