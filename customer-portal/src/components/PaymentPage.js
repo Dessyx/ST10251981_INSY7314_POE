@@ -279,7 +279,7 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
             </div>
 
             <div className="form-group full-width">
-              <label htmlFor="description">Description (Optional)</label>
+              <label htmlFor="description">Description</label>
               <input 
                 type="text" 
                 id="description" 
