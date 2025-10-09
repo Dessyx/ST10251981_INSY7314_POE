@@ -13,13 +13,13 @@ A secure payment application with  for an internal international payment system.
 - **Transaction History** - View all your past transactions with detailed information
 - **Real-time Transaction Tracking** - Track payment status (pending, verified, completed)
 - **Payment Confirmation** - Review and confirm transactions before submission
-- **Transaction Dashboard** - Employee portal to verify and manage all transactions
+- **Transaction Dashboard** - Admin portal to verify and manage all transactions
 
 ### 👤 User Management
 
 - **User Registration** - Secure account creation with validation
 - **User Authentication** - Login with username and account number
-- **Role-Based Access Control** - Customer and Employee roles with different permissions
+- **Role-Based Access Control** - Customer and Admin roles with different permissions
 - **Protected Routes** - Secure pages that require authentication
 - **Profile Management** - View and manage account details
 
@@ -49,10 +49,6 @@ A secure payment application with  for an internal international payment system.
 # Create .env file with MongoDB Atlas connection
 cd api-server
 .\create-env.ps1  # Windows PowerShell
-# OR
-./create-env.sh   # Linux/Mac
-
-# Or manually create api-server/.env file (see api-server/README.md)
 ```
 
 ### 2. Install Dependencies
@@ -109,32 +105,37 @@ cd customer-portal
 npm start
 ```
 
-### 6. Access the Application
+### 6. Verify Server Health
+
+Before accessing the application, verify both servers are running properly:
+
+**Check API Server:**
+```bash
+# Open in browser or use curl
+https://localhost:4000/health
+
+# Or in PowerShell:
+curl.exe -k https://localhost:4000/health
+```
+
+You should see: `{"status":"OK","timestamp":"..."}`
+
+**If the health check fails:**
+- Make sure you're in the `api-server` directory
+- Verify `.env` file exists with MongoDB connection string
+- Check that MongoDB Atlas IP is whitelisted
+- Look for errors in the server console
+
+### 7. Access the Application
 
 - **Frontend:** https://localhost:3000
-- **Backend:** https://localhost:4000
+- **Backend API:** https://localhost:4000
+- **Health Check:** https://localhost:4000/health
 
-**First time:** You'll see a security warning. Click "Advanced" → "Proceed to localhost" (this is normal for local development).
-
----
-
-## 🔄 Migration to MongoDB Atlas - COMPLETE!
-
-✅ **The application has been migrated from SQLite to MongoDB Atlas!**
-
-### What Changed:
-- ✅ All SQLite files removed
-- ✅ MongoDB Atlas fully integrated
-- ✅ User roles (customer/employee/admin) implemented
-- ✅ Fixed internal server error on signup
-- ✅ Admin seeding script added
-
-### See detailed migration info:
-- `api-server/README.md` - Complete API documentation
-- `api-server/QUICK_START.md` - Fast setup guide
-- `MIGRATION_COMPLETE.md` - Full migration details
+**First time:** You'll see a security warning. Click "Advanced" → "Proceed to localhost"
 
 ---
+
 
 ## 🔓 Remove "Not Secure" Warning
 
@@ -214,21 +215,14 @@ After running `npm run seed-admin` in the api-server directory:
 
 **Admin Account:**
 - Username: `admin`
-- Account Number: `ADMIN001`
-- Password: `Admin@123`
+- Account Number: `999999999999`
+- Password: `Admin@123!`
 - Role: `admin`
-
-**Employee Account:**
-- Username: `employee`
-- Account Number: `EMP001`
-- Password: `Employee@123`
-- Role: `employee`
 
 **Customer Account:**
 - Create your own by signing up on the website!
 - Role: `customer` (default)
 
-⚠️ **Important:** Change admin/employee passwords before deploying to production!
 
 ---
 
