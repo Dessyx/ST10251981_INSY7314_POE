@@ -52,7 +52,7 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
 
   // Format transaction data for display safely
   const formatTransaction = (transaction) => {
-    const id = transaction.id ? `TXN${transaction.id.toString().padStart(6, '0')}` : 'TXN000000';
+    const id = transaction.id ? `TXN${transaction.id.toString().padStart(8, '0')}` : 'TXN00000000';
     const amount = transaction.amount ? `${transaction.currency || 'USD'} ${parseFloat(transaction.amount).toFixed(2)}` : 'N/A';
     const rawDate = transaction.created_at || transaction.timestamp;
     const date = rawDate ? new Date(rawDate) : null;

@@ -1,5 +1,6 @@
 // Payment Service for API Integration
 import axios from 'axios';
+import { authService } from './authService';
 
 // Updated to use HTTPS for secure communication
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://localhost:4000';
@@ -94,14 +95,19 @@ class PaymentService {
   // Sanitize payment data for security
   static sanitizePaymentData(paymentData) {
     const swiftCode = paymentData.swiftCode || paymentData.swift_code || '';
+    const currentUser = authService.getCurrentUser();
+    
     return {
       amount: parseFloat(paymentData.amount),
       currency: paymentData.currency.toUpperCase(),
       recipient: paymentData.recipient.trim(),
+      recipient_name: paymentData.recipient.trim(),
       provider: paymentData.provider.trim(),
       swift_code: swiftCode.toUpperCase().replace(/\s+/g, ''), // Remove any spaces
       description: paymentData.description ? paymentData.description.trim() : '',
-      user_id: parseInt(paymentData.userId) || parseInt(paymentData.user_id) || 1, // Convert to integer
+      user_id: paymentData.userId || paymentData.user_id || currentUser.id,
+      user_full_name: currentUser.fullName || 'Unknown User',
+      payment_date: new Date().toISOString()
     };
   }
 }
