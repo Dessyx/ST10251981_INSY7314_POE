@@ -1,9 +1,10 @@
+// api-server/routes/users.js
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 const jwt = require('jsonwebtoken');
-const userModel = require('../models/user');
 const bcrypt = require('bcrypt');
+const { User, getUserByUsername, getUserByAccountNumber, getUserByIdNumber, createUser } = require('../models/user');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const PEPPER = process.env.PEPPER || '';
@@ -19,134 +20,102 @@ const registrationSchema = Joi.object({
   password: Joi.string().min(8).max(128).required(),
 });
 
-
-router.post('/register', async (req, res) => {
-  const { error, value } = registrationSchema.validate(req.body);
-  if (error) {
-    const errorMessage = error.details[0].message || 'Invalid input provided';
-    return res.status(400).json({ error: errorMessage });
-  }
-
-  // Check if username already exists
-  const existingUsername = await userModel.getUserByUsername(value.username);
-  if (existingUsername) return res.status(400).json({ error: 'Username already exists' });
-
-  // Check if account number already exists
-  const existingAccount = await userModel.getUserByAccountNumber(value.account_number);
-  if (existingAccount) return res.status(400).json({ error: 'Account number already exists' });
-
-  // Check if ID number already exists
-  const existingId = await userModel.getUserByIdNumber(value.id_number);
-  if (existingId) return res.status(400).json({ error: 'ID number already exists' });
-
-  const userId = await userModel.createUser(value);
-  
-  const token = jwt.sign({ id: userId, username: value.username, role: 'customer' }, JWT_SECRET, { expiresIn: '1h' });
-  
-  // Set HTTPOnly, Secure, and SameSite cookie
-  res.cookie('authToken', token, {
-    httpOnly: true,        // Prevents JavaScript access (XSS protection)
-    secure: true,          // Only sent over HTTPS
-    sameSite: 'strict',    // CSRF protection
-    maxAge: 3600000,       // 1 hour in milliseconds
-    path: '/',
-    domain: 'localhost'
-  });
-
-  res.status(201).json({ 
-    success: true,
-    message: 'Registration successful',
-    user: {
-      id: userId,
-      username: value.username,
-      role: 'customer'
-    }
-  });
-});
-
-
+// Login schema
 const loginSchema = Joi.object({
   username: Joi.string().required(),
   account_number: Joi.string().required(),
   password: Joi.string().min(8).max(128).required(),
 });
 
-router.post('/login', async (req, res) => {
-  const { error, value } = loginSchema.validate(req.body);
-  if (error) return res.status(400).json({ error: 'Invalid input provided' });
+// REGISTER endpoint
+router.post('/register', async (req, res) => {
+  try {
+    const { error, value } = registrationSchema.validate(req.body);
+    if (error) return res.status(400).json({ error: error.details[0].message });
 
-  // Find user by username
-  const user = await userModel.getUserByUsername(value.username);
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (await getUserByUsername(value.username))
+      return res.status(400).json({ error: 'Username already exists' });
 
-  // Verify account number matches
-  if (user.account_number !== value.account_number) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+    if (await getUserByAccountNumber(value.account_number))
+      return res.status(400).json({ error: 'Account number already exists' });
+
+    if (await getUserByIdNumber(value.id_number))
+      return res.status(400).json({ error: 'ID number already exists' });
+
+    const userId = await createUser(value, PEPPER);
+
+    const token = jwt.sign({ id: userId, username: value.username, role: 'customer' }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.cookie('authToken', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 3600000,
+      path: '/',
+      domain: 'localhost'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      user: { id: userId, username: value.username, role: 'customer' }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  // Verify password
-  const valid = await bcrypt.compare(value.password + PEPPER, user.password_hash);
-  if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-
-  const token = jwt.sign({ 
-    id: user.id, 
-    username: user.username, 
-    role: user.role || 'customer' 
-  }, JWT_SECRET, { expiresIn: '1h' });
-  
-  // Set HTTPOnly, Secure, and SameSite cookie
-  res.cookie('authToken', token, {
-    httpOnly: true,        // Prevents JavaScript access (XSS protection)
-    secure: true,          // Only sent over HTTPS
-    sameSite: 'strict',    // CSRF protection
-    maxAge: 3600000,       // 1 hour in milliseconds
-    path: '/',
-    domain: 'localhost'
-  });
-  
-  res.json({ 
-    success: true,
-    message: 'Login successful',
-    user: {
-      role: user.role || 'customer',
-      userId: user.id,
-      username: user.username,
-      fullName: user.full_name
-    }
-  });
 });
 
-// Logout endpoint to clear the cookie
+// LOGIN endpoint
+router.post('/login', async (req, res) => {
+  try {
+    const { error, value } = loginSchema.validate(req.body);
+    if (error) return res.status(400).json({ error: 'Invalid input provided' });
+
+    const user = await getUserByUsername(value.username);
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (user.account_number !== value.account_number) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const valid = await bcrypt.compare(value.password + PEPPER, user.password_hash);
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const token = jwt.sign({ id: user._id, username: user.username, role: user.role || 'customer' }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.cookie('authToken', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 3600000,
+      path: '/',
+      domain: 'localhost'
+    });
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: { role: user.role || 'customer', userId: user._id, username: user.username, fullName: user.full_name }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// LOGOUT endpoint
 router.post('/logout', (req, res) => {
-  res.clearCookie('authToken', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    domain: 'localhost'
-  });
+  res.clearCookie('authToken', { httpOnly: true, secure: true, sameSite: 'strict', path: '/', domain: 'localhost' });
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
-// Verify authentication endpoint
+// VERIFY authentication
 router.get('/verify', (req, res) => {
   try {
     const token = req.cookies.authToken;
-    
-    if (!token) {
-      return res.json({ authenticated: false });
-    }
+    if (!token) return res.json({ authenticated: false });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    res.json({ 
-      authenticated: true,
-      user: {
-        id: decoded.id,
-        username: decoded.username,
-        role: decoded.role || 'customer'
-      }
-    });
-  } catch (error) {
+    res.json({ authenticated: true, user: { id: decoded.id, username: decoded.username, role: decoded.role || 'customer' } });
+  } catch {
     res.json({ authenticated: false });
   }
 });

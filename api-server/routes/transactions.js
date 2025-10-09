@@ -1,144 +1,72 @@
 const express = require('express');
 const router = express.Router();
-const { body, validationResult, param } = require('express-validator');
-const Transaction = require('../models/transaction');
-const { paymentLimiter, historyLimiter } = require('../middleware/security');
+const Transaction = require('../models/Transaction'); 
 
-// Input validation middleware for creating a transaction
-const validateTransaction = [
-  body('amount')
-    .isFloat({ min: 0.01 })
-    .withMessage('Amount must be a positive number'),
-  body('currency')
-    .isIn(['ZAR', 'USD', 'EUR', 'GBP'])
-    .withMessage('Invalid currency'),
-  body('recipient')
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Recipient name must be 2-100 characters'),
-  body('provider')
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Provider name must be 2-100 characters'),
-  body('swift_code')
-    .matches(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)
-    .withMessage('Invalid SWIFT code format'),
-  body('user_id')
-    .isInt({ min: 1 })
-    .withMessage('Valid user ID is required')
-];
-
-// GET all transactions
-router.get('/', historyLimiter, async (req, res) => {
+// CREATE a new transaction
+router.post('/', async (req, res) => {
   try {
-    const { user_id, status, limit = 50, offset = 0 } = req.query;
+    const { amount, recipient, provider, swift_code, payment_date } = req.body;
 
-    let transactions = await Transaction.getAllWithUsers();
-
-    if (user_id) {
-      transactions = transactions.filter(t => t.user_id == user_id);
-    }
-
-    if (status) {
-      transactions = transactions.filter(t => t.status === status);
-    }
-
-    const startIndex = parseInt(offset);
-    const endIndex = startIndex + parseInt(limit);
-    const paginatedTransactions = transactions.slice(startIndex, endIndex);
-
-    res.json({
-      transactions: paginatedTransactions,
-      total: transactions.length,
-      limit: parseInt(limit),
-      offset: parseInt(offset)
+    // Create transaction
+    const transaction = new Transaction({
+      amount,
+      recipient,
+      provider,
+      swift_code,
+      payment_date
     });
-  } catch (err) {
-    console.error('Get transactions error:', err);
-    res.status(500).json({ error: "Failed to fetch transactions" });
-  }
-});
 
-// GET a specific transaction by ID
-router.get('/:id', historyLimiter, [
-  param('id').isInt({ min: 1 }).withMessage('Invalid transaction ID')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    const savedTransaction = await transaction.save();
 
-    const transaction = await Transaction.getById(req.params.id);
-    if (!transaction) {
-      return res.status(404).json({ error: "Transaction not found" });
-    }
-
-    res.json(transaction);
-  } catch (err) {
-    console.error('Get transaction error:', err);
-    res.status(500).json({ error: "Failed to fetch transaction" });
-  }
-});
-
-// POST a new transaction
-router.post('/', paymentLimiter, validateTransaction, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { user_id, amount, currency, recipient, provider, swift_code, description } = req.body;
-
-    const sanitizedData = {
-      user_id: parseInt(user_id),
-      amount: parseFloat(amount),
-      currency: currency.toUpperCase(),
-      recipient_name: recipient.trim(),
-      provider: provider.trim(),
-      swift_code: swift_code.toUpperCase(),
-      description: description ? description.trim() : '',
-      status: 'pending'
+    // Convert _id to id for frontend
+    const responseTransaction = { 
+      ...savedTransaction.toObject(), 
+      id: savedTransaction._id 
     };
 
-    const newTransaction = await Transaction.create(sanitizedData);
-
-    console.log(`Transaction created: ID ${newTransaction.id}, Amount: ${newTransaction.currency} ${newTransaction.amount}, User: ${newTransaction.user_id}`);
-
-    res.status(201).json({
-      ...newTransaction,
-      transactionId: `TXN${newTransaction.id.toString().padStart(6, '0')}`,
-      timestamp: newTransaction.created_at
-    });
+    res.status(201).json(responseTransaction);
   } catch (err) {
     console.error('Create transaction error:', err);
-    res.status(500).json({ error: "Failed to create transaction" });
+    res.status(500).json({ message: 'Failed to create transaction', error: err.message });
   }
 });
 
-// PATCH update transaction status
-router.patch('/:id', [
-  param('id').isInt({ min: 1 }).withMessage('Invalid transaction ID'),
-  body('status').isIn(['pending', 'verified', 'completed', 'failed', 'cancelled'])
-    .withMessage('Invalid status')
-], async (req, res) => {
+// GET all transactions
+router.get('/', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    const transactions = await Transaction.find().sort({ payment_date: -1 });
 
-    const { status } = req.body;
-    const updatedTransaction = await Transaction.updateStatus(req.params.id, status);
+    // Map each transaction to include `id`
+    const responseTransactions = transactions.map(t => ({
+      ...t.toObject(),
+      id: t._id
+    }));
 
-    if (!updatedTransaction) {
-      return res.status(404).json({ error: "Transaction not found" });
-    }
-
-    console.log(`Transaction ${req.params.id} status updated to: ${status}`);
-    res.json(updatedTransaction);
+    res.status(200).json(responseTransactions);
   } catch (err) {
-    console.error('Update transaction error:', err);
-    res.status(500).json({ error: "Failed to update transaction" });
+    console.error('Get transactions error:', err);
+    res.status(500).json({ message: 'Failed to fetch transactions', error: err.message });
+  }
+});
+
+// GET a single transaction by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    // Convert _id to id
+    const responseTransaction = { 
+      ...transaction.toObject(), 
+      id: transaction._id 
+    };
+
+    res.status(200).json(responseTransaction);
+  } catch (err) {
+    console.error('Get transaction error:', err);
+    res.status(500).json({ message: 'Failed to fetch transaction', error: err.message });
   }
 });
 

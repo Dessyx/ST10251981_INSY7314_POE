@@ -22,7 +22,7 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
       try {
         setLoading(true);
         setError('');
-        
+
         // Get transactions for current user
         const currentUserId = authService.getCurrentUserId();
         console.log('Current user ID:', currentUserId, 'Type:', typeof currentUserId);
@@ -39,25 +39,36 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
     fetchTransactions();
   }, []);
 
-  // Filter transactions by selected date
+  // Filter transactions by selected date safely
   const filteredTransactions = selectedDate 
     ? transactions.filter(transaction => {
-        const transactionDate = new Date(transaction.created_at || transaction.timestamp).toISOString().split('T')[0];
+        const rawDate = transaction.created_at || transaction.timestamp;
+        const transactionDate = rawDate && !isNaN(new Date(rawDate)) 
+          ? new Date(rawDate).toISOString().split('T')[0] 
+          : null;
         return transactionDate === selectedDate;
       })
     : transactions;
 
-  // Format transaction data for display
-  const formatTransaction = (transaction) => ({
-    id: `TXN${transaction.id.toString().padStart(6, '0')}`,
-    amount: `${transaction.currency} ${parseFloat(transaction.amount).toFixed(2)}`,
-    date: new Date(transaction.created_at || transaction.timestamp).toISOString().split('T')[0],
-    status: transaction.status || 'Completed',
-    recipient: transaction.recipient_name || transaction.recipient || 'Unknown',
-    type: 'Payment',
-    description: transaction.description || '',
-    timestamp: transaction.created_at || transaction.timestamp
-  });
+  // Format transaction data for display safely
+  const formatTransaction = (transaction) => {
+    const id = transaction.id ? `TXN${transaction.id.toString().padStart(6, '0')}` : 'TXN000000';
+    const amount = transaction.amount ? `${transaction.currency || 'USD'} ${parseFloat(transaction.amount).toFixed(2)}` : 'N/A';
+    const rawDate = transaction.created_at || transaction.timestamp;
+    const date = rawDate ? new Date(rawDate) : null;
+    const formattedDate = date && !isNaN(date) ? date.toISOString().split('T')[0] : 'N/A';
+
+    return {
+      id,
+      amount,
+      date: formattedDate,
+      status: transaction.status || 'Completed',
+      recipient: transaction.recipient_name || transaction.recipient || 'Unknown',
+      type: 'Payment',
+      description: transaction.description || '',
+      timestamp: rawDate
+    };
+  };
 
   return (
     <div className="transaction-history-page">
@@ -144,8 +155,14 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
                 </button>
               </div>
             ) : filteredTransactions.length > 0 ? (
-              filteredTransactions.map((transaction, index) => {
+              filteredTransactions.map((transaction) => {
                 const formattedTransaction = formatTransaction(transaction);
+
+                // Safe timestamp display
+                const timestampDate = formattedTransaction.timestamp ? new Date(formattedTransaction.timestamp) : null;
+                const displayDate = timestampDate && !isNaN(timestampDate) ? timestampDate.toLocaleDateString() : 'N/A';
+                const displayTime = timestampDate && !isNaN(timestampDate) ? timestampDate.toLocaleTimeString() : 'N/A';
+
                 return (
                   <div key={transaction.id} className="transaction-item">
                     <div className="transaction-icon">
@@ -157,8 +174,7 @@ const TransactionHistory = ({ currentPage, setCurrentPage }) => {
                           <h4 className="transaction-id">{formattedTransaction.id}</h4>
                           <p className="transaction-recipient">To: {formattedTransaction.recipient}</p>
                           <p className="transaction-date">
-                            {new Date(formattedTransaction.timestamp).toLocaleDateString()} at{' '}
-                            {new Date(formattedTransaction.timestamp).toLocaleTimeString()}
+                            {displayDate} at {displayTime}
                           </p>
                           {formattedTransaction.description && (
                             <p className="transaction-description">{formattedTransaction.description}</p>
