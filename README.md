@@ -43,15 +43,28 @@ A secure payment application with  for an internal international payment system.
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### 1. Setup MongoDB Environment
 
 ```bash
-# Install root dependencies
-npm install
+# Create .env file with MongoDB Atlas connection
+cd api-server
+.\create-env.ps1  # Windows PowerShell
+# OR
+./create-env.sh   # Linux/Mac
 
+# Or manually create api-server/.env file (see api-server/README.md)
+```
+
+### 2. Install Dependencies
+
+```bash
 # Install API server dependencies
 cd api-server
 npm install
+
+# Seed admin and employee users
+npm run seed-admin
+
 cd ..
 
 # Install customer portal dependencies
@@ -60,7 +73,7 @@ npm install
 cd ..
 ```
 
-### 2. Generate SSL Certificates
+### 3. Generate SSL Certificates
 
 ```bash
 cd api-server
@@ -70,7 +83,7 @@ cd ..
 
 This creates SSL certificates in `api-server/ssl/` folder.
 
-### 3. Setup HTTPS for React
+### 4. Setup HTTPS for React
 
 ```bash
 cd customer-portal
@@ -80,7 +93,7 @@ cd ..
 
 This creates a `.env` file with HTTPS configuration.
 
-### 4. Run the Application
+### 5. Run the Application
 
 **Open two terminals:**
 
@@ -96,12 +109,30 @@ cd customer-portal
 npm start
 ```
 
-### 5. Access the Application
+### 6. Access the Application
 
 - **Frontend:** https://localhost:3000
 - **Backend:** https://localhost:4000
 
 **First time:** You'll see a security warning. Click "Advanced" → "Proceed to localhost" (this is normal for local development).
+
+---
+
+## 🔄 Migration to MongoDB Atlas - COMPLETE!
+
+✅ **The application has been migrated from SQLite to MongoDB Atlas!**
+
+### What Changed:
+- ✅ All SQLite files removed
+- ✅ MongoDB Atlas fully integrated
+- ✅ User roles (customer/employee/admin) implemented
+- ✅ Fixed internal server error on signup
+- ✅ Admin seeding script added
+
+### See detailed migration info:
+- `api-server/README.md` - Complete API documentation
+- `api-server/QUICK_START.md` - Fast setup guide
+- `MIGRATION_COMPLETE.md` - Full migration details
 
 ---
 
@@ -177,33 +208,27 @@ Restart your browser.
 
 ## 🧪 Accounts
 
-After running the application, login with:
+### Default Login Credentials
 
-### Create Admin Account (First Time Setup)
+After running `npm run seed-admin` in the api-server directory:
 
-Before logging in as an employee, run this command:
-
-```bash
-cd api-server
-node seed-employees.js
-cd ..
-```
-
-This creates the admin/employee account.
-
-### Login Credentials
-
-After running the application, login with:
-
-**Customer Account:**
-- Username: your own email
-- Account Number: your own account number
-- Password: your own password
+**Admin Account:**
+- Username: `admin`
+- Account Number: `ADMIN001`
+- Password: `Admin@123`
+- Role: `admin`
 
 **Employee Account:**
-- Username: `admin`
-- Account Number: `999999999999`
-- Password: `Admin@123!`
+- Username: `employee`
+- Account Number: `EMP001`
+- Password: `Employee@123`
+- Role: `employee`
+
+**Customer Account:**
+- Create your own by signing up on the website!
+- Role: `customer` (default)
+
+⚠️ **Important:** Change admin/employee passwords before deploying to production!
 
 ---
 
@@ -241,11 +266,19 @@ cd ../customer-portal && npm install
 ## 📝 Environment Variables
 
 ### API Server
-Create `.env` in `api-server/`:
+Create `.env` in `api-server/` (or use `create-env.ps1` script):
 ```env
-PORT=4000
+# MongoDB Connection
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/paynow?retryWrites=true&w=majority
+
+# Security Secrets
 JWT_SECRET=your-secret-key-here
+PEPPER=your-pepper-secret-here
+COOKIE_SECRET=your-cookie-secret-here
+
+# Server Configuration
 NODE_ENV=development
+PORT=4000
 ```
 
 ### Customer Portal

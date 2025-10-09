@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
   account_number: { type: String, required: true, unique: true },
   username: { type: String, required: true, unique: true },
   password_hash: { type: String, required: true },
+  role: { type: String, enum: ['customer', 'employee', 'admin'], default: 'customer' },
+  balance: { type: Number, default: 0 }
 });
 
 const User = mongoose.model('User', userSchema);

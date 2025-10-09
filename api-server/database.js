@@ -4,10 +4,7 @@ require('dotenv').config();
 
 const uri = process.env.MONGO_URI;
 
-mongoose.connect(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+mongoose.connect(uri)
 .then(() => console.log('MongoDB connected from database.js!'))
 .catch(err => console.error('MongoDB connection error:', err));
 

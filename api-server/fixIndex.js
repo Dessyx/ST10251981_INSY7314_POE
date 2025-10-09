@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
+require('dotenv').config();
 
-const MONGO_URI = "mongodb+srv://soyamapango15_db_user:lJZGLadcp08eK1Lu@paynowdb.vmyr5pc.mongodb.net/paynow?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(MONGO_URI)
   .then(async () => {
     console.log("Connected to MongoDB...");

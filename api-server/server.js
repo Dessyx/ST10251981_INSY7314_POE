@@ -9,6 +9,10 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+require('dotenv').config();
+
+// Initialize MongoDB connection
+require('./database');
 
 const app = express();
 

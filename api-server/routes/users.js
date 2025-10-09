@@ -42,7 +42,7 @@ router.post('/register', async (req, res) => {
     if (await getUserByIdNumber(value.id_number))
       return res.status(400).json({ error: 'ID number already exists' });
 
-    const userId = await createUser(value, PEPPER);
+    const userId = await createUser(value);
 
     const token = jwt.sign({ id: userId, username: value.username, role: 'customer' }, JWT_SECRET, { expiresIn: '1h' });
 
