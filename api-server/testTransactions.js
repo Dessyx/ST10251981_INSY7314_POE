@@ -1,11 +1,9 @@
-// api-server/testTransactions.js
-const mongoose = require('./database');
+const mongoose = require('./database'); 
 const Transaction = require('./models/transaction');
 
 async function runTransaction() {
+  const session = await mongoose.startSession();  
   try {
-    // Start a new session for the transaction
-    const session = await mongoose.startSession();
     session.startTransaction();
 
     const tx1 = new Transaction({ sender: 'Alice', receiver: 'Bob', amount: 100 });
@@ -15,17 +13,15 @@ async function runTransaction() {
     await tx2.save({ session });
 
     await session.commitTransaction();
-    console.log(' Transactions committed successfully!');
-
+    console.log('Transactions committed successfully!');
   } catch (error) {
-    console.error(' Transaction failed:', error);
-    await mongoose.connection.abortTransaction?.();
+    await session.abortTransaction();
+    console.error('Transaction failed:', error);
   } finally {
-    // Always end the session and close the connection
-    mongoose.connection.close(() => {
-      console.log('MongoDB connection closed.');
-    });
+    session.endSession();                
+    await mongoose.connection.close();  
   }
 }
 
+// Run the function
 runTransaction();
