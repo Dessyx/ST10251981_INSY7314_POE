@@ -293,4 +293,4 @@ SSL_KEY_FILE=../api-server/ssl/key.pem
 ---
 
 ## 💡 Youtube Video
-- link: 
+- link: https://www.youtube.com/watch?v=te9XyHphrBc 
