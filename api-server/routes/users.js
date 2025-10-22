@@ -5,6 +5,7 @@ const Joi = require('joi');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { User, getUserByUsername, getUserByAccountNumber, getUserByIdNumber, createUser } = require('../models/user');
+const { getCsrfToken, validateCsrfMiddleware } = require('../middleware/csrf');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const PEPPER = process.env.PEPPER || '';
@@ -27,8 +28,11 @@ const loginSchema = Joi.object({
   password: Joi.string().min(8).max(128).required(),
 });
 
+// GET CSRF TOKEN endpoint
+router.get('/csrf-token', getCsrfToken);
+
 // REGISTER endpoint
-router.post('/register', async (req, res) => {
+router.post('/register', validateCsrfMiddleware, async (req, res) => {
   try {
     const { error, value } = registrationSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
@@ -67,7 +71,7 @@ router.post('/register', async (req, res) => {
 });
 
 // LOGIN endpoint
-router.post('/login', async (req, res) => {
+router.post('/login', validateCsrfMiddleware, async (req, res) => {
   try {
     const { error, value } = loginSchema.validate(req.body);
     if (error) return res.status(400).json({ error: 'Invalid input provided' });
@@ -102,8 +106,9 @@ router.post('/login', async (req, res) => {
 });
 
 // LOGOUT endpoint
-router.post('/logout', (req, res) => {
+router.post('/logout', validateCsrfMiddleware, (req, res) => {
   res.clearCookie('authToken', { httpOnly: true, secure: true, sameSite: 'strict', path: '/', domain: 'localhost' });
+  res.clearCookie('csrf_token_id', { httpOnly: true, secure: true, sameSite: 'strict', path: '/', domain: 'localhost' });
   res.json({ success: true, message: 'Logged out successfully' });
 });
 

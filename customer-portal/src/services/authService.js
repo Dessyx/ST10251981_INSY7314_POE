@@ -13,19 +13,41 @@ const apiClient = axios.create({
   withCredentials: true, 
 });
 
-// Add response interceptor to handle auth errors
+// CSRF token storage
+let csrfToken = null;
+let csrfTokenExpiry = null;
+
+// Function to get CSRF token
+const getCsrfToken = async () => {
+  if (csrfToken && csrfTokenExpiry && Date.now() < csrfTokenExpiry) {
+    return csrfToken;
+  }
+  
+  try {
+    const response = await apiClient.get('/users/csrf-token');
+    csrfToken = response.data.csrfToken;
+    csrfTokenExpiry = Date.now() + response.data.expiresIn - 30000;
+    return csrfToken;
+  } catch (error) {
+    console.error('Failed to get CSRF token:', error);
+    throw new Error('Failed to get CSRF token');
+  }
+};
+
+const clearCsrfToken = () => {
+  csrfToken = null;
+  csrfTokenExpiry = null;
+};
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - cookie will be cleared by server
-      // Clear any localStorage data
       localStorage.removeItem('userRole');
       localStorage.removeItem('userId');
       localStorage.removeItem('username');
       localStorage.removeItem('fullName');
       
-      // Only redirect if not already on signin page
       if (!window.location.pathname.includes('/signin') && !window.location.pathname.includes('/signup')) {
         window.location.href = '/signin';
       }
@@ -38,12 +60,19 @@ export const authService = {
   // Register a new user
   async register(userData) {
     try {
+      // Get CSRF token
+      const token = await getCsrfToken();
+      
       const response = await apiClient.post('/users/register', {
         full_name: userData.fullName,
         id_number: userData.idNumber,
         account_number: userData.accountNumber,
         username: userData.username,
         password: userData.password,
+      }, {
+        headers: {
+          'X-CSRF-Token': token
+        }
       });
       
       const { user } = response.data;
@@ -52,15 +81,18 @@ export const authService = {
       localStorage.setItem('userId', user.id);
       localStorage.setItem('username', user.username);
       
+      clearCsrfToken();
+      
       return {
         success: true,
         user,
         message: 'Registration successful!'
       };
     } catch (error) {
+      clearCsrfToken();
       return {
         success: false,
-        error: error.response?.data?.error || 'Registration failed. Please try again.'
+        error: error.response?.data?.error || error.response?.data?.message || 'Registration failed. Please try again.'
       };
     }
   },
@@ -68,10 +100,17 @@ export const authService = {
   // Login user
   async login(credentials) {
     try {
+      // Get CSRF token
+      const token = await getCsrfToken();
+      
       const response = await apiClient.post('/users/login', {
         username: credentials.username,
         account_number: credentials.accountNumber,
         password: credentials.password,
+      }, {
+        headers: {
+          'X-CSRF-Token': token
+        }
       });
       
       const { user } = response.data;
@@ -81,15 +120,18 @@ export const authService = {
       localStorage.setItem('username', user.username);
       localStorage.setItem('fullName', user.fullName);
       
+      clearCsrfToken();
+      
       return {
         success: true,
         user,
         message: 'Login successful!'
       };
     } catch (error) {
+      clearCsrfToken();
       return {
         success: false,
-        error: error.response?.data?.error || 'Login failed. Please check your credentials.'
+        error: error.response?.data?.error || error.response?.data?.message || 'Login failed. Please check your credentials.'
       };
     }
   },
@@ -97,12 +139,22 @@ export const authService = {
   // Logout user
   async logout() {
     try {
+      // Get CSRF token
+      const token = await getCsrfToken();
+      
       // Call logout endpoint to clear HTTPOnly cookie
-      await apiClient.post('/users/logout');
+      await apiClient.post('/users/logout', {}, {
+        headers: {
+          'X-CSRF-Token': token
+        }
+      });
     } catch (error) {
       console.error('Logout error:', error);
       // Continue with logout even if API call fails
     }
+    
+    // Clear CSRF token
+    clearCsrfToken();
     
     // Clear localStorage
     localStorage.removeItem('userRole');

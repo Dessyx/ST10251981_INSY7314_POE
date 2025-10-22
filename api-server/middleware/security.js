@@ -73,10 +73,9 @@ const sanitizeInput = (req, res, next) => {
   next();
 };
 
-// CSRF protection middleware
+// CSRF protection 
 const csrfProtection = (req, res, next) => {
-  // Skip CSRF protection for certain routes or if it's a GET request
-  const skipRoutes = ['/health', '/transactions'];
+  const skipRoutes = ['/health', '/transactions', '/users'];
   const shouldSkip = req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS' || 
                     skipRoutes.some(route => req.path.startsWith(route));
   
@@ -84,7 +83,6 @@ const csrfProtection = (req, res, next) => {
     return next();
   }
   
-  // Check for X-Requested-With header (AJAX requests)
   if (!req.headers['x-requested-with']) {
     return res.status(403).json({
       error: 'CSRF protection: X-Requested-With header required'
