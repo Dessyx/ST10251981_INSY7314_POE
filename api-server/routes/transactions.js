@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/Transaction');
-const { verifyToken } = require('../middleware/auth'); 
+const { verifyToken } = require('../middleware/auth');
+const { validateCsrfMiddleware } = require('../middleware/csrf'); 
 
 // CREATE a new transaction
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, validateCsrfMiddleware, async (req, res) => {
   try {
     const { 
       amount, 
@@ -107,7 +108,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 });
 
 // UPDATE transaction status (PATCH) - Admin only
-router.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, validateCsrfMiddleware, async (req, res) => {
   try {
     // Only admins can update transaction status
     if (req.user.role !== 'admin') {

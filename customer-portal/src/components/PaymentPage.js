@@ -129,7 +129,6 @@ const PaymentPage = ({ currentPage, setCurrentPage }) => {
         userId: authService.getCurrentUserId() // Use actual logged-in user ID
       });
 
-
       // Navigate to confirmation page with form data
       navigate('/confirmation', { 
         state: { 

@@ -15,14 +15,49 @@ const apiClient = axios.create({
   withCredentials: true, // REQUIRED for HTTPOnly cookies - automatically sends cookies
 });
 
+// CSRF token management for payment operations
+let csrfToken = null;
+let csrfTokenExpiry = null;
+
+// Function to get CSRF token
+const getCsrfToken = async () => {
+  if (csrfToken && csrfTokenExpiry && Date.now() < csrfTokenExpiry) {
+    return csrfToken;
+  }
+  
+  try {
+    const response = await apiClient.get('/users/csrf-token');
+    csrfToken = response.data.csrfToken;
+    csrfTokenExpiry = Date.now() + response.data.expiresIn - 30000;
+    return csrfToken;
+  } catch (error) {
+    console.error('Failed to get CSRF token:', error);
+    throw new Error('Failed to get CSRF token');
+  }
+};
+
+// Function to clear CSRF token
+const clearCsrfToken = () => {
+  csrfToken = null;
+  csrfTokenExpiry = null;
+};
+
 class PaymentService {
   // Create a new transaction
   static async createTransaction(transactionData) {
     try {
-      const response = await apiClient.post('/transactions', transactionData);
+      // Get CSRF token
+      const token = await getCsrfToken();
+      
+      const response = await apiClient.post('/transactions', transactionData, {
+        headers: {
+          'X-CSRF-Token': token
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Payment service error:', error);
+      clearCsrfToken(); // Clear token on error
       throw new Error(error.response?.data?.error || 'Failed to create transaction');
     }
   }
@@ -53,10 +88,18 @@ class PaymentService {
   // Update transaction status
   static async updateTransactionStatus(transactionId, status) {
     try {
-      const response = await apiClient.patch(`/transactions/${transactionId}`, { status });
+      // Get CSRF token
+      const token = await getCsrfToken();
+      
+      const response = await apiClient.patch(`/transactions/${transactionId}`, { status }, {
+        headers: {
+          'X-CSRF-Token': token
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Update transaction error:', error);
+      clearCsrfToken(); // Clear token on error
       throw new Error(error.response?.data?.error || 'Failed to update transaction');
     }
   }
@@ -110,6 +153,7 @@ class PaymentService {
       payment_date: new Date().toISOString()
     };
   }
+
 }
 
 export default PaymentService;

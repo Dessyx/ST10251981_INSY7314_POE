@@ -75,7 +75,7 @@ const sanitizeInput = (req, res, next) => {
 
 // CSRF protection 
 const csrfProtection = (req, res, next) => {
-  const skipRoutes = ['/health', '/transactions', '/users'];
+  const skipRoutes = ['/health', '/users/csrf-token'];
   const shouldSkip = req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS' || 
                     skipRoutes.some(route => req.path.startsWith(route));
   
