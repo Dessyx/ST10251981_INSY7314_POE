@@ -4,20 +4,28 @@ orbs:
   sonarcloud: sonarsource/sonarcloud@2.0.0
 
 jobs:
-  build:
+  say-hello:
     docker:
-      - image: cimg/node:18.18.1  
+      - image: cimg/base:stable
     steps:
       - checkout
       - run:
-          name: Install dependencies and build project
-          command: |
-            npm install
-            npm run build     
+          name: "Say hello"
+          command: "echo Hello, World!"
+
+  node-sonar:
+    docker:
+      - image: cimg/node:18.18.1 
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
       - sonarcloud/scan
 
 workflows:
   main:
     jobs:
-      - build:
+      - say-hello
+      - node-sonar:
           context: SonarCloud
