@@ -1,1 +1,5 @@
 .env
+key.pem
+create-env.sh
+create-env.ps1
+bcrypt/Dockerfile
