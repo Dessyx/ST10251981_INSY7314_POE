@@ -1,4 +1,5 @@
 const mongoose = require('../database');
+const { encrypt, decrypt } = require('../utils/encryption');
 
 const userSchema = new mongoose.Schema({
   full_name: { type: String, required: true },
@@ -33,10 +34,14 @@ async function createUser(data) {
   const PEPPER = process.env.PEPPER || '';
   const hashedPassword = await bcrypt.hash(data.password + PEPPER, 10);
 
+  // encrypt sensitive fields
+  const encryptedIdNumber = data.id_number ? encrypt(data.id_number) : null;
+  const encryptedAccountNumber = data.account_number ? encrypt(data.account_number) : null;
+
   const newUser = new User({
     full_name: data.full_name,
-    id_number: data.id_number,
-    account_number: data.account_number,
+    id_number: encryptedIdNumber,
+    account_number: encryptedAccountNumber,
     username: data.username,
     password_hash: hashedPassword,
     balance: 0
@@ -46,10 +51,28 @@ async function createUser(data) {
   return savedUser._id;
 }
 
+// helper to get user and decrypt sensitive fields
+async function findUserByUsernameDecrypted(username) {
+  const user = await User.findOne({ username });
+  if (!user) return null;
+  const obj = user.toObject();
+
+  // decrypt fields if present
+  try {
+    obj.id_number = obj.id_number ? decrypt(obj.id_number) : null;
+    obj.account_number = obj.account_number ? decrypt(obj.account_number) : null;
+  } catch (err) {
+    console.warn('Failed to decrypt fields for user:', user._id, err);
+  }
+
+  return obj;
+}
+
 module.exports = {
   User,
-  getUserByUsername,
+  getUserByUsername,           
   getUserByAccountNumber,
   getUserByIdNumber,
-  createUser
+  createUser,
+  findUserByUsernameDecrypted  
 };
