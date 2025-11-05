@@ -62,7 +62,8 @@ async function findUserByUsernameDecrypted(username) {
     obj.id_number = obj.id_number ? decrypt(obj.id_number) : null;
     obj.account_number = obj.account_number ? decrypt(obj.account_number) : null;
   } catch (err) {
-    console.warn('Failed to decrypt fields for user:', user._id, err);
+    console.error('Failed to decrypt fields for user:', user._id, err.message);
+
   }
 
   return obj;

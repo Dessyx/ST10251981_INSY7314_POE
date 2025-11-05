@@ -58,9 +58,6 @@ cd api-server
 cd api-server
 npm install
 
-# Seed admin and employee users
-npm run seed-admin
-
 cd ..
 
 # Install customer portal dependencies
@@ -211,8 +208,6 @@ Restart your browser.
 
 ### Default Login Credentials
 
-After running `npm run seed-admin` in the api-server directory:
-
 **Admin Account:**
 - Username: `admin`
 - Account Number: `999999999999`
@@ -293,4 +288,4 @@ SSL_KEY_FILE=../api-server/ssl/key.pem
 ---
 
 ## 💡 Youtube Video
-- link: https://www.youtube.com/watch?v=te9XyHphrBc 
+- link: https://youtu.be/VopmFnTOfNs 

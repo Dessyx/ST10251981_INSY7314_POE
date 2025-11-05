@@ -28,16 +28,17 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Seed admin user
-const seedAdmin = async () => {
+// Reset admin user
+const resetAdmin = async () => {
   try {
     await connectDB();
 
-    // Check if admin already exists
-    const existingAdmin = await User.findOne({ username: 'admin' });
-    if (existingAdmin) {
-      console.log('⚠ Admin user already exists');
-      process.exit(0);
+    // Delete existing admin user
+    const deleteResult = await User.deleteOne({ username: 'admin' });
+    if (deleteResult.deletedCount > 0) {
+      console.log('✓ Old admin user deleted');
+    } else {
+      console.log('ℹ No existing admin user found');
     }
 
     const PEPPER = process.env.PEPPER || '';
@@ -58,18 +59,23 @@ const seedAdmin = async () => {
     });
 
     await adminUser.save();
-    console.log('✓ Admin user created successfully');
+    console.log('');
+    console.log('✓ Admin user created successfully!');
+    console.log('');
+    console.log('Login credentials:');
     console.log('  Username: admin');
     console.log('  Account Number: 999999999999');
     console.log('  Password: Admin@123!');
-
+    console.log('');
+    console.log('IMPORTANT: Change the password after first login!');
+    console.log('');
 
     process.exit(0);
   } catch (err) {
-    console.error('Error seeding admin:', err);
+    console.error('Error resetting admin:', err);
     process.exit(1);
   }
 };
 
-seedAdmin();
+resetAdmin();
 
