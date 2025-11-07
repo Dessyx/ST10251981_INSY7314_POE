@@ -31,10 +31,10 @@ jobs:
       - image: sonarsource/sonar-scanner-cli
     resource_class: small
     steps:
-      - run: apk update
-      - run: apk upgrade
-      - run: apk --no-cache add --update openssh git curl
-      - checkout
+     - run: sudo apt-get update
+    - run: sudo apt-get upgrade -y
+    - run: sudo apt-get install -y git curl openssh-client
+
       - run: find .
       - attach_workspace:
           at: ~/workspace
