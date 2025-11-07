@@ -30,9 +30,14 @@ jobs:
 sonarqube:
   working_directory: ~/build
   docker:
-    - image: sonarsource/sonar-scanner-cli
+    - image: cimg/base:stable 
   steps:
     - checkout
+    - run:
+        name: Install dependencies
+        command: |
+          apk update
+          apk add --no-cache git curl openssh findutils
     - run:
         name: Run SonarQube scan
         command: |
