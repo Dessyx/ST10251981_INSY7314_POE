@@ -21,13 +21,19 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install root dependencies
           command: npm install
+      - run:
+          name: Install customer-portal dependencies
+          command: cd customer-portal && npm install
+      - run:
+          name: Install api-server dependencies
+          command: cd api-server && npm install
       - sonarcloud/scan  
 
   # -----------------------
   # SONARQUBE 
- sonarqube:
+  sonarqube:
     working_directory: ~/build
     docker:
       - image: cimg/node:18.18.1
