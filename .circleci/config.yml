@@ -27,23 +27,23 @@ jobs:
 
   # -----------------------
   # SONARQUBE 
-   sonarqube:
+    sonarqube:
     working_directory: ~/build
     docker:
-      - image: cimg/node:18.18.1
+      - image: cimg/openjdk:17.0
     resource_class: small
     steps:
       - checkout
       - run:
           name: Install SonarQube Scanner
           command: |
-            npm install -g sonarqube-scanner
-      - run:
-          name: Show files
-          command: find .
+            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+            unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+            export PATH=$PATH:~/build/sonar-scanner-5.0.1.3006-linux/bin
       - run:
           name: Run SonarQube scan
           command: |
+            export PATH=$PATH:~/build/sonar-scanner-5.0.1.3006-linux/bin
             SONAR_BRANCH="${CIRCLE_BRANCH:-master}"
             echo "Running SonarQube analysis on branch: $SONAR_BRANCH"
             sonar-scanner \
