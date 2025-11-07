@@ -42,7 +42,7 @@ jobs:
       - checkout
       - run:
           name: Install SonarQube Scanner
-          command: npm install -g sonarqube-scanner
+          command: sudo npm install -g sonarqube-scanner
       - run:
           name: Show files
           command: find .
