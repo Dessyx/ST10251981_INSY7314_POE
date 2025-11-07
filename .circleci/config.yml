@@ -13,9 +13,10 @@ jobs:
           name: "Say hello"
           command: "echo Hello, World!"
 
-  node-sonar:
+  # SONARCLOUD
+  node-sonarcloud:
     docker:
-      - image: cimg/node:18.18.1 
+      - image: cimg/node:18.18.1
     steps:
       - checkout
       - run:
@@ -23,9 +24,33 @@ jobs:
           command: npm install
       - sonarcloud/scan
 
+  # SONARQUBE
+ sonarqube:
+  working_directory: ~/build
+  docker:
+    - image: sonarsource/sonar-scanner-cli
+  resource_class: small
+  steps:
+    - checkout
+    - run: sudo apt-get update
+    - run: sudo apt-get upgrade -y
+    - run: sudo apt-get install -y openssh-client git curl
+    - run: find .
+    - run: |
+        SONAR_BRANCH="${CIRCLE_BRANCH:-master}"
+        sonar-scanner \
+          -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
+          -Dsonar.host.url="http://localhost:9000" \
+          -Dsonar.login="$SONAR_TOKEN" \
+          -Dsonar.branch.name="$SONAR_BRANCH" \
+          -Dsonar.sources="customer-portal/src,api-server" \
+          -Dsonar.exclusions="**/node_modules/**,**/build/**"
+
+
 workflows:
   main:
     jobs:
       - say-hello
-      - node-sonar:
+      - node-sonarcloud:
           context: SonarCloud
+      - sonarqube
