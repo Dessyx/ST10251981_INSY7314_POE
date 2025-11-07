@@ -27,28 +27,23 @@ jobs:
 
   # -----------------------
   # SONARQUBE 
-  sonarqube:
-    working_directory: ~/build
-    docker:
-      - image: sonarsource/sonar-scanner-cli
-    resource_class: small
-    steps:
-      - checkout
-      - run:
-          name: Show files
-          command: find .
-      - run:
-          name: Run SonarQube scan
-          command: |
-            SONAR_BRANCH="${CIRCLE_BRANCH:-master}"
-            echo "Running SonarQube analysis on branch: $SONAR_BRANCH"
-            sonar-scanner \
-              -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
-              -Dsonar.host.url="http://localhost:9000" \
-              -Dsonar.login="$SONAR_TOKEN" \
-              -Dsonar.branch.name="$SONAR_BRANCH" \
-              -Dsonar.sources="customer-portal/src,api-server" \
-              -Dsonar.exclusions="**/node_modules/**,**/build/**"
+sonarqube:
+  working_directory: ~/build
+  docker:
+    - image: sonarsource/sonar-scanner-cli
+  steps:
+    - checkout
+    - run:
+        name: Run SonarQube scan
+        command: |
+          SONAR_BRANCH="${CIRCLE_BRANCH:-master}"
+          sonar-scanner \
+            -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
+            -Dsonar.host.url="http://localhost:9000" \
+            -Dsonar.login="$SONAR_TOKEN" \
+            -Dsonar.branch.name="$SONAR_BRANCH" \
+            -Dsonar.sources="customer-portal/src,api-server"
+
 
 workflows:
   main:
